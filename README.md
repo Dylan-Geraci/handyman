@@ -17,7 +17,7 @@ Install the following before starting:
 - [Node.js 18+ (LTS)](https://nodejs.org/)
 - [MongoDB Community](https://www.mongodb.com/try/download/community) (local)  
   or a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster
-- Git
+- Git, Github desktop if you prefer.
 
 Verify:
 ```bash
