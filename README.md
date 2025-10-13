@@ -13,7 +13,7 @@ Full-stack handyman management platform
 ## 0) Requirements
 Install the following before starting:
 
-- [Python 3.11+](https://www.python.org/downloads/)
+- [Python 3.11+](https://www.python.org/downloads/) Use virtual enviornment managers like [anaconda](https://www.anaconda.com/download) 
 - [Node.js 18+ (LTS)](https://nodejs.org/)
 - [MongoDB Community](https://www.mongodb.com/try/download/community) (local)  
   or a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster
