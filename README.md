@@ -1,7 +1,7 @@
 # Handyman Project — Setup and Development Guide
 
 ## Overview
-Full-stack handyman management platform for college developers learning modern web stacks.
+Full-stack handyman management platform
 
 - **Backend:** FastAPI + MongoDB
 - **Frontend:** React + Vite + TailwindCSS
