@@ -1,6 +1,0 @@
-backend/__pycache__/
-.venv/
-.env
-context.txt
-frontend/venv/
-frontend/node_modules/
