@@ -97,6 +97,55 @@ This document outlines the current implementation status of the handyman platfor
 
 ---
 
+## USER MODEL ARCHITECTURE (TASKER-SIDED APPROACH)
+
+### CURRENT MODEL:
+- Users choose `role: "client"` OR `role: "tasker"` at registration
+- Roles are mutually exclusive
+- Role determines all permissions
+
+### DESIRED MODEL (PER MENTOR GUIDANCE):
+- **All users are clients by default** - can post tasks, hire taskers
+- **Users can optionally become taskers** - sign up separately to accept tasks
+- This mirrors platforms like Uber (everyone can ride, drivers sign up separately)
+
+### IMPLEMENTATION REQUIREMENTS:
+1. **User Schema Changes:**
+   - Add `is_tasker: bool = False` to user document
+   - Add `phone: str` field
+   - Add `zip_code: str` field (replaces general location for clients)
+   - Keep tasker-specific fields (skills, service_categories, etc.) populated when becoming tasker
+
+2. **Client Registration Fields (Required for all users):**
+   - `full_name` - User's name
+   - `username` - Email address (used for login)
+   - `phone` - Phone number
+   - `password` - Account password
+   - `zip_code` - User's zip code
+
+3. **Tasker Enrollment Fields (TBD):**
+   - Additional information required when becoming a tasker
+   - Likely: skills, service_categories, bio, profile_image_url
+   - To be finalized based on what information is needed to match taskers with jobs
+
+5. **New "Become a Tasker" Flow:**
+   - Endpoint: `POST /users/me/become-tasker`
+   - Collects: skills, service_categories, etc. (TBD)
+   - Sets `is_tasker: True`
+
+6. **Authorization Logic Changes:**
+   - Client actions (create task, search taskers): Any authenticated user
+   - Tasker actions (view open tasks, accept tasks): Only if `is_tasker == True`
+
+7. **Database Migration:**
+   - Existing `role: "tasker"` users → `is_tasker: True`
+   - Existing `role: "client"` users → `is_tasker: False`
+
+### IMPLEMENTATION TIMING:
+This should be implemented before or alongside Phase 3 (Tasker Profile Enhancement), as it fundamentally changes how tasker profiles work.
+
+---
+
 ## CURRENT FOCUS: CATEGORIZATION & SEARCH FEATURE
 
 This is our current implementation priority. All other features are on hold until this is complete.
@@ -105,7 +154,7 @@ This is our current implementation priority. All other features are on hold unti
 
 ## CATEGORIZATION & SEARCH - PHASE-BY-PHASE IMPLEMENTATION PLAN
 
-### **PHASE 1: Database Schema & Seed Data**
+### **PHASE 1: Database Schema & Seed Data** ✅ COMPLETED
 
 #### Backend Tasks:
 1. **Create `categories` collection**
@@ -162,7 +211,7 @@ This is our current implementation priority. All other features are on hold unti
 
 ---
 
-### **PHASE 2: Backend API - Categories & Task Types**
+### **PHASE 2: Backend API - Categories & Task Types** ✅ COMPLETED
 
 #### Backend Tasks:
 1. **Create Pydantic Models** (in main.py)
@@ -205,26 +254,40 @@ This is our current implementation priority. All other features are on hold unti
 
 ---
 
-### **PHASE 3: Backend API - Tasker Profile Enhancement**
+### **PHASE 3: Backend API - User Model & Tasker Enrollment**
 
 #### Backend Tasks:
-1. **Update Registration Endpoint** (`POST /register`)
-   - Modify to accept optional `service_categories: List[str]` in request body
-   - Validate category IDs exist in database
-   - Only allow for role="tasker"
-   - Store in users collection
+1. **Update User Schema & Registration** (`POST /register`)
+   - Update UserCreate model: remove role, add phone, zip_code
+   - All users register as clients by default
+   - Set `is_tasker: False` on new users
+   - Registration fields: full_name, username (email), phone, password, zip_code
 
-2. **Update Profile Endpoint** (`PUT /users/me`)
-   - Allow updating `service_categories` field
-   - Validate only taskers can set this field
+2. **Create "Become a Tasker" Endpoint** (`POST /users/me/become-tasker`)
+   - Collects tasker-specific info: service_categories, skills, bio, profile_image_url (TBD)
+   - Validate category IDs exist in database
+   - Sets `is_tasker: True`
+   - Only allowed for users where `is_tasker == False`
+
+3. **Update Profile Endpoint** (`PUT /users/me`)
+   - Allow updating `service_categories` field only if `is_tasker == True`
    - Validate all category IDs exist
    - Return updated profile
 
-3. **Enhance Tasker Public Profile** (`GET /api/taskers/{username}`)
+4. **Update Authorization Checks** (throughout `routers/tasks.py`)
+   - Replace `role != "client"` checks with general auth (any user can be a client)
+   - Replace `role != "tasker"` checks with `is_tasker != True`
+
+5. **Enhance Tasker Public Profile** (`GET /api/taskers/{username}`)
    - Include populated service categories (not just IDs, but full category objects)
    - Show category names in response
 
-**Deliverable:** Taskers can define and manage their service categories
+6. **Database Migration Script**
+   - Add `is_tasker`, `phone`, `zip_code` fields to existing users
+   - Existing `role: "tasker"` users → `is_tasker: True`
+   - Existing `role: "client"` users → `is_tasker: False`
+
+**Deliverable:** New user model implemented; users can enroll as taskers
 
 ---
 
@@ -298,26 +361,34 @@ This is our current implementation priority. All other features are on hold unti
 
 ---
 
-### **PHASE 6: Frontend - Registration Enhancement**
+### **PHASE 6: Frontend - Registration & Tasker Enrollment**
 
 #### Frontend Tasks:
-1. **Update Register Component** (`frontend/src/components/Register.jsx`)
-   - Fetch categories from `GET /api/categories` on component mount
-   - Add "Select Your Service Categories" section (only show if role=tasker)
-   - Implement multi-select UI:
+1. **Simplify Register Component** (`frontend/src/components/Register.jsx`)
+   - Remove role selection (all users are clients)
+   - Collect only client fields: full_name, email, phone, password, zip_code
+   - Clean, simple registration form
+   - Redirect to dashboard after registration
+
+2. **Create "Become a Tasker" Component** (`frontend/src/components/BecomeTasker.jsx`)
+   - Accessible from user profile or dashboard
+   - Fetch categories from `GET /api/categories`
+   - Collect tasker info: service_categories, skills, bio, profile photo (TBD)
+   - Implement multi-select UI for categories:
      - Option A: Checkbox grid
      - Option B: Tag/chip selector
      - Option C: Dropdown multi-select
-   - Validate at least one category selected before submit
-   - Include selected category IDs in registration request
+   - Validate at least one category selected
+   - Call `POST /users/me/become-tasker` endpoint
+   - Show success message and update UI to reflect tasker status
 
-2. **Styling:**
+3. **Styling:**
    - Use TailwindCSS for consistent design
    - Add visual indicators (icons/images for categories)
    - Responsive design for mobile
    - Show category descriptions on hover/click
 
-**Deliverable:** Taskers select service categories during signup
+**Deliverable:** Simple client registration + separate tasker enrollment flow
 
 ---
 
