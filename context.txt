@@ -558,3 +558,48 @@ Before starting Phase 1, confirm:
 ---
 
 ## END OF CATEGORIZATION & SEARCH IMPLEMENTATION PLAN
+
+config.py
+
+  Purpose: Loads all settings and external service configurations.
+
+  Contains:
+  - Environment variables (SECRET_KEY, DATABASE_URL, GOOGLE_API_KEY)
+  - JWT settings (algorithm, expiration time)
+  - Password hasher setup
+  - Gemini AI model initialization
+
+  Why separate: Settings are loaded once at startup and imported everywhere. Keeps sensitive config in one place.
+
+  ---
+  database.py
+
+  Purpose: Connects to MongoDB and defines all collection references.
+
+  Contains:
+  - MongoDB client connection
+  - All collection variables (users_collection, tasks_collection, categories_collection, etc.)
+
+  Why separate: Any file can do from database import users_collection instead of setting up the connection themselves.
+
+  ---
+  models.py
+
+  Purpose: Defines the shape of data going in/out of the API.
+
+  Contains:
+  - Pydantic models for request validation (UserCreate, Task, Review)
+  - Pydantic models for responses (UserPublic, CategoryResponse)
+
+  Why separate: Models are used across multiple routers. Centralizing them prevents circular imports.
+
+  ---
+  security.py
+
+  Purpose: Authentication and authorization utilities.
+
+  Contains:
+  - hash_password() / verify_password() - Password hashing
+  - create_access_token() - JWT token creation
+  - get_current_user() - FastAPI dependency that validates tokens
+  - serialize_document() - Converts MongoDB docs to JSON
