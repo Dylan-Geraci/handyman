@@ -1,0 +1,41 @@
+Report
+
+11/28/2025 - Beatriz
+
+Improved color scheme to fit logo and style
+    - instead of a harsh red, i switched it so that its more of a softer, warm based red
+    - updated UI (more friendly)
+    - removed old theme
+
+Navigation Bar Upgrade
+    - implemented stickey and blurred navbar using the backdrop filters
+    - improved padding, spacing, and link styling
+    - cleaned up visiable clusters
+
+Homepage
+    - refreshed hero design using a softer shadowed card (easier on the eyes in my opinion)
+    - updated CTA styling
+    - changed title (might have to revert it back)
+    - improved contrast and spacing
+
+    Top row
+        - emojis and preview rows for categories
+        - rederict to the full category page
+
+    Trust Section/how it works
+        - user friendly
+
+Component addition
+    - created Footer Component
+        - includes quick links, brand naem, and copuright (more professional)
+
+UX improvements
+    - feels more modern, less harsh, more professional
+    - Navigation is more clearer and more obvious
+
+
+########################### NEXT STEP ###########################
+- begin wiring categories --> tasks --> "create tasks"
+- build FULL categories UI with 
+- mobile (down the line)
+
