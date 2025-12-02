@@ -18,14 +18,24 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 # --- Password Functions ---
+MAX_BCRYPT_LENGTH = 72
+
+def _truncate_for_bcrypt(password: str) -> str:
+    """Ensure password length is safe for bcrypt."""
+    if not isinstance(password, str):
+        password = str(password)
+    return password[:MAX_BCRYPT_LENGTH]
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    safe = _truncate_for_bcrypt(plain_password)
+    return pwd_context.verify(safe, hashed_password)
 
 
 def hash_password(password: str) -> str:
     """Hash a password for storing."""
-    return pwd_context.hash(password)
+    safe = _truncate_for_bcrypt(password)
+    return pwd_context.hash(safe)
 
 
 # --- JWT Token Functions ---

@@ -13,6 +13,12 @@ function Contact() {
   // A state to hold the status message (e.g., "Message sent!")
   const [statusMessage, setStatusMessage] = useState('');
 
+  const softRed = {
+    main: 'bg-[#E65A5A]',
+    hover: 'hover:bg-[#D94E4E]',
+    text: 'text-[#E65A5A]',
+  };
+
   // This function runs every time the user types in an input field
   const handleChange = (e) => {
     setFormData({
@@ -52,7 +58,7 @@ function Contact() {
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#E65A5A]"
           />
         </div>
         <div className="mb-4">
@@ -64,7 +70,7 @@ function Contact() {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#E65A5A]"
           />
         </div>
         <div className="mb-6">
@@ -76,11 +82,11 @@ function Contact() {
             onChange={handleChange}
             required
             rows="5"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#E65A5A]"
           ></textarea>
         </div>
         <div className="text-center">
-          <button type="submit" className="bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-blue-700 transition-colors">
+          <button type="submit" className={`text-white font-bold py-2 px-6 rounded-md transition-colors ${softRed.main} ${softRed.hover}`}>
             Send Message
           </button>
         </div>

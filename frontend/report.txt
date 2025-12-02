@@ -39,3 +39,53 @@ UX improvements
 - build FULL categories UI with 
 - mobile (down the line)
 
+
+12/1/2025 - Categorization & Search Feature
+Completed by Beatriz
+
+Categories and Task Types
+    - added full category list based on TaskRabbit’s structure
+    - implemented dropdown sections showing task types under each category
+    - ensured layout is clear, modern, and mobile-friendly
+    - connected each task type to correct routing logic
+
+Client Experience
+    - when a client clicks a task type, they are taken directly to the new task creation page
+    - task type is pre-loaded so the user doesn’t need to re-select what they want
+    - simplified workflow to reduce confusion and match real-world task app behavior
+
+Tasker Experience
+    - taskers clicking a task type are redirected to the Tasker Dashboard with the category filter active
+    - automatically shows all tasks matching that service type
+    - supports additional filtering through location and search
+    - integrated user skills and location to improve relevance
+
+Search System
+    - implemented keyword search using backend query parameters
+    - added optional location filtering
+    - made sure general searches like “put together furniture” return “Furniture Assembly”
+    - updated frontend UI for search fields and results
+
+Tasker “Matches” Page
+    - created a matching algorithm using tasker skills, location, and category context
+    - dynamically shows best-fit tasks for the tasker
+    - updates in real time when tasks are accepted
+    - improves discoverability of available work
+
+UI and Color Palette
+    - replaced outdated color palette with modern luxury-inspired tones
+    - improved consistency across buttons, cards, and backgrounds
+    - refined the Tasker Dashboard UI for readability and visual hierarchy
+
+Backend Security Fix
+    - resolved bcrypt password length limitation error
+    - implemented safe password truncation to ensure secure hashing
+    - updated password hashing and verification functions without breaking existing users
+    - ensured registration and login flow now works smoothly
+
+Completion
+    - all required frontend features for Categorization & Search are fully implemented
+    - system supports browsing, filtering, searching, matching, and routing for both clients and taskers
+    - ready for team review and integration into the next development milestone
+
+################### TODO: record a video ##############################

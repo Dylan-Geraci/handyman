@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { softRed, neutrals } from '../styles/theme';
 
 function Home() {
   const { user } = useContext(AuthContext);
@@ -15,11 +16,7 @@ function Home() {
   const heroImageUrl =
     'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1600&auto=format&fit=crop';
 
-  const softRed = {
-    main: 'bg-[#E65A5A]',
-    hover: 'hover:bg-[#D94E4E]',
-    text: 'text-[#E65A5A]',
-  };
+  // theme tokens imported from src/styles/theme.js
 
   const topCategories = [
     { label: 'Furniture Assembly', emoji: '🪑' },

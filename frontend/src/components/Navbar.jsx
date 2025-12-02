@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import NotificationsPanel from './NotificationsPanel';
+import { softRed, neutrals } from '../styles/theme';
 
 function Navbar() {
   const { token, user, logout } = useContext(AuthContext);
@@ -46,8 +47,7 @@ function Navbar() {
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  const linkBase =
-    "text-sm font-medium text-slate-700 hover:text-[#E65A5A] transition-colors";
+  const linkBase = `text-sm font-medium ${neutrals.mainText} hover:text-[#E65A5A] transition-colors`;
 
   return (
     <nav className="sticky top-0 z-30 mb-3">
@@ -82,7 +82,7 @@ function Navbar() {
           {user && user.role === 'client' && (
             <Link
               to="/find-tasker"
-              className="bg-[#E65A5A] text-white font-semibold py-1.5 px-3 rounded-full text-xs sm:text-sm hover:bg-[#D94E4E] transition-transform duration-150 hover:-translate-y-[1px] shadow-sm"
+              className={`inline-flex items-center justify-center rounded-full ${softRed.main} text-white font-semibold py-1.5 px-3 text-xs sm:text-sm ${softRed.hover} transition-transform duration-150 hover:-translate-y-[1px] shadow-sm`}
             >
               Find a Tasker
             </Link>
@@ -163,7 +163,7 @@ function Navbar() {
               </Link>
               <Link
                 to="/register"
-                className="bg-[#E65A5A] text-white font-semibold py-1.5 px-4 rounded-full text-xs sm:text-sm hover:bg-[#D94E4E] transition-transform duration-150 hover:-translate-y-[1px] shadow-sm"
+                className={`inline-flex items-center justify-center rounded-full ${softRed.main} text-white font-semibold py-1.5 px-4 text-xs sm:text-sm ${softRed.hover} transition-transform duration-150 hover:-translate-y-[1px] shadow-sm`}
               >
                 Sign Up
               </Link>

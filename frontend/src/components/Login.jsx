@@ -2,6 +2,7 @@ import { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { softRed } from '../styles/theme';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -13,6 +14,8 @@ function Login() {
 
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // softRed imported from shared theme
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,11 +59,11 @@ function Login() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Login</h2>
-      
+    <div className="max-w-md mx-auto mt-10 px-4">
+      <h3 className="text-center text-sm font-medium text-slate-600 mb-4">Log in to CRETE Handyman</h3>
+      <div className="mx-auto w-full">
       {!showResetForm ? (
-        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md">
+        <form onSubmit={handleSubmit} className="rounded-2xl bg-white border border-[#F5C8C8]/60 shadow-[0_18px_45px_rgba(15,23,42,0.07)] p-8">
           <div className="mb-4">
             <label className="block text-gray-700 font-semibold mb-2">Email</label>
             <input
@@ -82,20 +85,23 @@ function Login() {
             />
           </div>
           <div className="text-center mb-4">
-            <button type="submit" className="bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-blue-700">
+            <button type="submit" className={`text-white font-bold py-2 px-6 rounded-md ${softRed.main} ${softRed.hover}`}>
               Login
             </button>
           </div>
           <p
-            className="text-blue-600 text-center cursor-pointer hover:underline"
+            className={`${softRed.text} text-center cursor-pointer hover:underline`}
             onClick={() => setShowResetForm(true)}
           >
             Forgot Password?
           </p>
           {error && <p className="text-red-500 text-center mt-4">{error}</p>}
+          <p className="text-center mt-4 text-sm">
+            Don't have an account? <a href="/register" className={`${softRed.text} font-semibold hover:underline`}>Create an account</a>
+          </p>
         </form>
       ) : (
-        <form onSubmit={handleForgotPassword} className="bg-white p-8 rounded-lg shadow-md">
+        <form onSubmit={handleForgotPassword} className="rounded-2xl bg-white border border-[#F5C8C8]/60 shadow-[0_18px_45px_rgba(15,23,42,0.07)] p-8">
           <div className="mb-4">
             <label className="block text-gray-700 font-semibold mb-2">Enter your email</label>
             <input
@@ -107,19 +113,23 @@ function Login() {
             />
           </div>
           <div className="text-center mb-4">
-            <button type="submit" className="bg-green-600 text-white font-bold py-2 px-6 rounded-md hover:bg-green-700">
+            <button type="submit" className={`text-white font-bold py-2 px-6 rounded-md ${softRed.main} ${softRed.hover}`}>
               Send Reset Link
             </button>
           </div>
           <p
-            className="text-blue-600 text-center cursor-pointer hover:underline"
+            className={`${softRed.text} text-center cursor-pointer hover:underline`}
             onClick={() => setShowResetForm(false)}
           >
             Back to Login
           </p>
           {resetMessage && <p className="text-green-500 text-center mt-4">{resetMessage}</p>}
+          <p className="text-center mt-4 text-sm">
+            Don't have an account? <a href="/register" className={`${softRed.text} font-semibold hover:underline`}>Create an account</a>
+          </p>
         </form>
       )}
+      </div>
     </div>
   );
 }

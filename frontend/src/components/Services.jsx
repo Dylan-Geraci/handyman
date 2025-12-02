@@ -2,12 +2,18 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import SkeletonLoader from './SkeletonLoader'; // We'll use our skeleton loader here
 
+const softRed = {
+  main: 'bg-[#E65A5A]',
+  hover: 'hover:bg-[#D94E4E]',
+  text: 'text-[#E65A5A]',
+};
+
 // NEW: A helper function to get an icon based on the service name
 const getServiceIcon = (serviceName) => {
     const name = serviceName.toLowerCase();
     if (name.includes('plumb')) {
         // Wrench Icon
-        return <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>;
+      return <svg className="w-8 h-8 text-[#E65A5A]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>;
     }
     if (name.includes('electric')) {
         // Lightbulb Icon
