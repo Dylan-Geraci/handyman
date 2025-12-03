@@ -60,43 +60,158 @@ async def ai_search_taskers(
     query: AISearchQuery,
     current_user: Annotated[dict, Depends(get_current_user)]
 ):
-    """Search for taskers using AI to parse natural language queries."""
-    if not gemini_model:
-        raise HTTPException(
-            status_code=500,
-            detail="Gemini API is not configured. Please check your API key."
-        )
+    """Search for taskers using AI to parse natural language queries with keyword fallback."""
     if current_user["role"] != "client":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only clients can search for taskers."
         )
 
-    prompt = f"""
-    Analyze the following client request: "{query.query}"
-    Extract the `skills` (as a list of lowercase strings) and the `location` (as a string).
-    Return ONLY a valid JSON object. Example: {{"skills": ["plumbing", "faucet repair"], "location": "Fullerton"}}
-    """
+    skills = []
+    location = None
+    used_fallback = False
 
-    try:
-        response = gemini_model.generate_content(prompt)
-        json_text = response.text.strip().replace(
-            "```json", "").replace("```", "").strip()
-        entities = json.loads(json_text)
-        skills = [skill.lower() for skill in entities.get("skills", [])]
-        location = entities.get("location")
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to process AI query: {e}")
+    # Try AI parsing first
+    if gemini_model:
+        prompt = f"""
+        Analyze the following client request: "{query.query}"
 
+        Extract:
+        1. skills: List of relevant skills or services needed (lowercase, specific terms)
+        2. location: City or area mentioned (if any)
+
+        Be specific with skills. Examples:
+        - "fix a leaky faucet" -> ["plumbing", "faucet repair"]
+        - "help moving furniture" -> ["moving", "furniture assembly"]
+        - "clean my house" -> ["cleaning", "housekeeping"]
+
+        Return ONLY a valid JSON object with this exact format:
+        {{"skills": ["skill1", "skill2"], "location": "City Name"}}
+
+        If no location is mentioned, use null for location.
+        """
+
+        try:
+            response = gemini_model.generate_content(prompt)
+            json_text = response.text.strip().replace("```json", "").replace("```", "").strip()
+            entities = json.loads(json_text)
+            skills = [skill.lower() for skill in entities.get("skills", [])]
+            location = entities.get("location")
+        except Exception as e:
+            # AI parsing failed, fall back to keyword search
+            print(f"AI parsing failed: {e}. Using keyword fallback.")
+            used_fallback = True
+    else:
+        # Gemini not configured, use fallback
+        used_fallback = True
+
+    # Fallback: Use keyword-based search
+    if used_fallback or (not skills and not location):
+        # Extract potential location and skills from query using simple keyword matching
+        query_lower = query.query.lower()
+
+        # Common location indicators
+        location_keywords = ["in ", "near ", "around ", "at "]
+        for keyword in location_keywords:
+            if keyword in query_lower:
+                location_start = query_lower.index(keyword) + len(keyword)
+                # Extract next word(s) as location
+                location_part = query.query[location_start:].split()[0:2]
+                location = " ".join(location_part).strip(".,!?")
+                break
+
+        # Use the entire query as a skill keyword search
+        # This will match against tasker skills using MongoDB text search
+        skills = [query.query.lower()]
+
+    # Build MongoDB query
     mongo_query = {"role": "tasker"}
+
     if skills:
-        mongo_query["skills"] = {"$all": skills}
+        # Use $in for fallback (matches any skill), $all for AI (matches all skills)
+        if used_fallback:
+            mongo_query["skills"] = {"$regex": skills[0], "$options": "i"}
+        else:
+            mongo_query["skills"] = {"$all": skills}
+
     if location:
         mongo_query["location"] = {"$regex": location, "$options": "i"}
 
     taskers_cursor = users_collection.find(mongo_query)
     return [UserPublic(**tasker) for tasker in taskers_cursor]
+
+
+@router.post("/tasks/suggest-type")
+async def suggest_task_type(
+    query: AISearchQuery,
+    current_user: Annotated[dict, Depends(get_current_user)]
+):
+    """Use AI to suggest appropriate task types based on user's description."""
+    if current_user["role"] != "client":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only clients can get task type suggestions."
+        )
+
+    # Try AI suggestion first
+    if gemini_model:
+        # Get all task types to provide context to AI
+        all_task_types = list(task_types_collection.find({}))
+        task_type_list = [f"- {tt['name']}: {tt.get('description', '')}" for tt in all_task_types[:20]]  # Limit to 20 for prompt length
+
+        prompt = f"""
+        A client needs help with: "{query.query}"
+
+        Available task types include:
+        {chr(10).join(task_type_list)}
+
+        Suggest the 3 most relevant task types from the list above.
+        Return ONLY a valid JSON array of task type names.
+        Example: ["Furniture Assembly", "Ikea Assembly", "General Handyman"]
+        """
+
+        try:
+            response = gemini_model.generate_content(prompt)
+            json_text = response.text.strip().replace("```json", "").replace("```", "").strip()
+            suggested_names = json.loads(json_text)
+
+            # Find matching task types in database
+            suggestions = []
+            for name in suggested_names:
+                task_type = task_types_collection.find_one({"name": {"$regex": name, "$options": "i"}})
+                if task_type:
+                    suggestions.append({
+                        "id": str(task_type["_id"]),
+                        "name": task_type["name"],
+                        "description": task_type.get("description", ""),
+                        "category_id": task_type.get("category_id")
+                    })
+
+            if suggestions:
+                return {"suggestions": suggestions, "method": "ai"}
+        except Exception as e:
+            print(f"AI suggestion failed: {e}. Using keyword fallback.")
+
+    # Fallback: Keyword-based search
+    # Search task types by keywords
+    search_results = list(task_types_collection.find({
+        "$or": [
+            {"name": {"$regex": query.query, "$options": "i"}},
+            {"keywords": {"$regex": query.query, "$options": "i"}},
+            {"description": {"$regex": query.query, "$options": "i"}}
+        ]
+    }).limit(3))
+
+    suggestions = []
+    for task_type in search_results:
+        suggestions.append({
+            "id": str(task_type["_id"]),
+            "name": task_type["name"],
+            "description": task_type.get("description", ""),
+            "category_id": task_type.get("category_id")
+        })
+
+    return {"suggestions": suggestions, "method": "keyword"}
 
 
 # --- Task CRUD ---
