@@ -89,3 +89,47 @@ Completion
     - ready for team review and integration into the next development milestone
 
 ################### TODO: record a video ##############################
+
+------------> recorded! :D 
+
+12/2/2025 - Beatriz
+
+task updates
+- Fixed the bug that was crashing the app when creating a new task
+- Made category and task type optional so the form works correctly again
+- Task creation is now smooth and error-free.
+
+client tasks page
+- Built the new My Tasks page for clients
+- The task cards look cleaner with improved spacing and colors
+- Added a view details button and a message tasker button when a tasker is assigned
+- The whole page feels more organized and easier to navigate.
+
+task details
+- Set up the backend route to fetch a single task
+- The frontend view page is ready to be wired next.
+
+tasker dashboard
+- Improved the matches section so it uses skills, location, and category
+- Cleaned up the accepted jobs section
+- Buttons and layout look cleaner and more professional
+- Added better loading states with the skeleton loaders.
+
+backend updates
+- Added a delete task endpoint and a single-task fetch endpoint
+- Improved validation so fewer things break.
+
+style and design
+- Updated card styles to look softer and more modern
+- Improved spacing and shadows to give everything a cleaner look
+- Buttons now fully match the new color theme.
+
+repo work
+- Helped resolve issues with pushing the feature branch and guided through pulling and rebasing.
+
+overall
+- The app feels much smoother, cleaner, and more functional
+- Both the tasker and client experience improved a lot today.
+
+
+################### TODO: AWAIT FOR ORDERS o7 ###################
