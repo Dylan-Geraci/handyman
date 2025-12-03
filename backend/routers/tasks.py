@@ -11,11 +11,47 @@ from bson import ObjectId
 
 from security import get_current_user, serialize_document
 from config import gemini_model
-from database import tasks_collection, users_collection, notifications_collection
+from database import tasks_collection, users_collection, notifications_collection, categories_collection, task_types_collection
 from models import Task, Notification, AISearchQuery, UserPublic
 
 
 router = APIRouter(prefix="/api", tags=["tasks"])
+
+
+# --- Helper Functions ---
+def populate_task_details(task: dict) -> dict:
+    """Populate task with category and task_type details."""
+    task_response = serialize_document(task)
+
+    # Populate category details
+    if task.get("category_id"):
+        try:
+            category = categories_collection.find_one({"_id": ObjectId(task["category_id"])})
+            if category:
+                task_response["category_populated"] = {
+                    "id": str(category["_id"]),
+                    "name": category["name"],
+                    "description": category["description"],
+                    "icon_url": category.get("icon_url")
+                }
+        except Exception:
+            pass
+
+    # Populate task_type details
+    if task.get("task_type_id"):
+        try:
+            task_type = task_types_collection.find_one({"_id": ObjectId(task["task_type_id"])})
+            if task_type:
+                task_response["task_type_populated"] = {
+                    "id": str(task_type["_id"]),
+                    "name": task_type["name"],
+                    "description": task_type["description"],
+                    "keywords": task_type.get("keywords", [])
+                }
+        except Exception:
+            pass
+
+    return task_response
 
 
 # --- AI Search ---
@@ -76,20 +112,61 @@ async def create_task(
             detail="Only clients can create tasks."
         )
 
+    # Validate category exists
+    try:
+        category = categories_collection.find_one({"_id": ObjectId(task.category_id)})
+        if not category:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid category ID: {task.category_id}"
+            )
+    except Exception as e:
+        if "Invalid category ID:" not in str(e):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid category ID format: {task.category_id}"
+            )
+        raise
+
+    # Validate task type exists
+    try:
+        task_type = task_types_collection.find_one({"_id": ObjectId(task.task_type_id)})
+        if not task_type:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid task type ID: {task.task_type_id}"
+            )
+    except Exception as e:
+        if "Invalid task type ID:" not in str(e):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid task type ID format: {task.task_type_id}"
+            )
+        raise
+
+    # Validate task type belongs to the specified category
+    if task_type["category_id"] != task.category_id:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Task type '{task_type['name']}' does not belong to the selected category"
+        )
+
     task_data = task.dict()
     task_data["client_username"] = current_user["username"]
 
     tasks_collection.insert_one(task_data)
-    return serialize_document(task_data)
+    return populate_task_details(task_data)
 
 
 @router.get("/tasks")
 async def get_open_tasks(
     current_user: Annotated[dict, Depends(get_current_user)],
     location: Optional[str] = None,
-    q: Optional[str] = None
+    q: Optional[str] = None,
+    category_id: Optional[str] = None,
+    task_type_id: Optional[str] = None
 ):
-    """Get open tasks (taskers only). Supports location and keyword filters."""
+    """Get open tasks (taskers only). Supports location, keyword, category, and task type filters."""
     if current_user["role"] != "tasker":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -104,9 +181,45 @@ async def get_open_tasks(
             {"title": {"$regex": q, "$options": "i"}},
             {"description": {"$regex": q, "$options": "i"}}
         ]
+    if category_id:
+        query["category_id"] = category_id
+    if task_type_id:
+        query["task_type_id"] = task_type_id
 
     tasks_cursor = tasks_collection.find(query)
-    return [serialize_document(task) for task in tasks_cursor]
+    return [populate_task_details(task) for task in tasks_cursor]
+
+
+@router.get("/tasks/matches")
+async def get_matched_tasks(
+    current_user: Annotated[dict, Depends(get_current_user)],
+    location: Optional[str] = None
+):
+    """Get tasks matching the tasker's service categories (taskers only)."""
+    if current_user["role"] != "tasker":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only taskers can view matched tasks."
+        )
+
+    # Get tasker's service categories
+    service_categories = current_user.get("service_categories", [])
+
+    if not service_categories:
+        # If tasker has no service categories set, return empty list
+        return []
+
+    # Find open tasks where category_id matches any of the tasker's categories
+    query = {
+        "status": "open",
+        "category_id": {"$in": service_categories}
+    }
+
+    if location:
+        query["location"] = {"$regex": location, "$options": "i"}
+
+    tasks_cursor = tasks_collection.find(query)
+    return [populate_task_details(task) for task in tasks_cursor]
 
 
 @router.put("/tasks/{task_id}/accept")
@@ -150,7 +263,7 @@ async def accept_task(
     notifications_collection.insert_one(notification_for_client.dict())
 
     updated_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
-    return serialize_document(updated_task)
+    return populate_task_details(updated_task)
 
 
 @router.put("/tasks/{task_id}/complete")
@@ -189,7 +302,7 @@ async def complete_task(
         notifications_collection.insert_one(notification_for_tasker.dict())
 
     updated_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
-    return serialize_document(updated_task)
+    return populate_task_details(updated_task)
 
 
 # --- My Tasks ---
@@ -203,7 +316,7 @@ async def get_my_client_tasks(current_user: Annotated[dict, Depends(get_current_
         )
     tasks_cursor = tasks_collection.find(
         {"client_username": current_user["username"]})
-    return [serialize_document(task) for task in tasks_cursor]
+    return [populate_task_details(task) for task in tasks_cursor]
 
 
 @router.get("/my-tasker-tasks")
@@ -216,4 +329,4 @@ async def get_my_tasker_tasks(current_user: Annotated[dict, Depends(get_current_
         )
     tasks_cursor = tasks_collection.find(
         {"tasker_username": current_user["username"]})
-    return [serialize_document(task) for task in tasks_cursor]
+    return [populate_task_details(task) for task in tasks_cursor]

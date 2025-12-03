@@ -3,7 +3,7 @@ Admin and public content routes.
 Handles services, portfolio, contact requests, tasker profiles, and reviews.
 """
 
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from bson import ObjectId
@@ -14,7 +14,8 @@ from database import (
     portfolio_collection,
     contact_requests_collection,
     users_collection,
-    reviews_collection
+    reviews_collection,
+    categories_collection
 )
 from models import Service, PortfolioItem, ContactRequest, Review, UserPublic
 
@@ -44,13 +45,79 @@ def submit_contact_request(request: ContactRequest):
     return {"status": "success", "message": "Your message has been sent!"}
 
 
-@router.get("/taskers/{username}", response_model=UserPublic)
+@router.get("/taskers/{username}")
 def get_tasker_profile(username: str):
-    """Get a tasker's public profile."""
+    """Get a tasker's public profile with populated service categories."""
     user = users_collection.find_one({"username": username, "role": "tasker"})
     if not user:
         raise HTTPException(status_code=404, detail="Tasker not found")
-    return user
+
+    # Populate service_categories with full category objects
+    if user.get("service_categories"):
+        populated_categories = []
+        for category_id in user["service_categories"]:
+            try:
+                category = categories_collection.find_one({"_id": ObjectId(category_id)})
+                if category:
+                    populated_categories.append({
+                        "id": str(category["_id"]),
+                        "name": category["name"],
+                        "description": category["description"],
+                        "icon_url": category.get("icon_url")
+                    })
+            except Exception:
+                # Skip invalid IDs (defensive programming)
+                continue
+
+        # Add populated categories to response
+        user_response = serialize_document(user)
+        user_response["service_categories_populated"] = populated_categories
+        return user_response
+
+    return serialize_document(user)
+
+
+@router.get("/taskers/browse")
+def browse_taskers(
+    category_id: Optional[str] = None,
+    location: Optional[str] = None
+):
+    """Browse taskers by category and location (public endpoint)."""
+    query = {"role": "tasker"}
+
+    # Filter by category if provided
+    if category_id:
+        query["service_categories"] = category_id
+
+    # Filter by location if provided
+    if location:
+        query["location"] = {"$regex": location, "$options": "i"}
+
+    taskers_cursor = users_collection.find(query)
+    taskers = []
+
+    for tasker in taskers_cursor:
+        # Populate service_categories with full category objects
+        populated_categories = []
+        if tasker.get("service_categories"):
+            for cat_id in tasker["service_categories"]:
+                try:
+                    category = categories_collection.find_one({"_id": ObjectId(cat_id)})
+                    if category:
+                        populated_categories.append({
+                            "id": str(category["_id"]),
+                            "name": category["name"],
+                            "description": category["description"],
+                            "icon_url": category.get("icon_url")
+                        })
+                except Exception:
+                    continue
+
+        tasker_response = serialize_document(tasker)
+        tasker_response["service_categories_populated"] = populated_categories
+        taskers.append(tasker_response)
+
+    return taskers
 
 
 @router.get("/reviews/{tasker_username}")

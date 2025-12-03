@@ -40,6 +40,7 @@ class UserBase(BaseModel):
     skills: Optional[List[str]] = []
     profile_image_url: Optional[str] = None
     bio: Optional[str] = None
+    service_categories: Optional[List[str]] = []  # Category IDs for taskers
 
 
 class UserCreate(UserBase):
@@ -56,6 +57,7 @@ class UserUpdate(BaseModel):
     skills: Optional[List[str]] = None
     profile_image_url: Optional[str] = None
     bio: Optional[str] = None
+    service_categories: Optional[List[str]] = None  # Category IDs for taskers
 
 
 # --- Task Models ---
@@ -63,6 +65,8 @@ class Task(BaseModel):
     title: str
     description: str
     location: str
+    category_id: str  # Required: Category this task belongs to
+    task_type_id: str  # Required: Specific task type within category
     status: str = "open"
     client_username: Optional[str] = None
     tasker_username: Optional[str] = None
