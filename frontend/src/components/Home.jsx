@@ -2,6 +2,8 @@ import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { softRed, neutrals } from '../styles/theme';
+import { motion } from "framer-motion";
+
 
 function Home() {
   const { user } = useContext(AuthContext);
@@ -23,11 +25,18 @@ function Home() {
     { label: 'TV Mounting', emoji: '📺' },
     { label: 'Cleaning', emoji: '🧹' },
     { label: 'Help Moving', emoji: '🚚' },
-    { label: 'Yardwork', emoji: '🌿' },
+    { label: 'Yardwork', emoji: '🌿' }, 
+    // i want to change these to different images rather
   ];
 
   return (
-    <div className="space-y-16">
+    <motion.div
+      className="space-y-16"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
+    {/* <div className="space-y-16"> */}
       {/* --- Hero Section --- */}
       <section className="rounded-3xl bg-gradient-to-b from-neutral-100 to-neutral-50 p-3 sm:p-4">
         <div className="rounded-2xl bg-white shadow-[0_18px_45px_rgba(15,23,42,0.07)] border border-[#F5C8C8]/60 overflow-hidden transition-transform duration-300 hover:-translate-y-[2px]">
@@ -113,6 +122,52 @@ function Home() {
         </div>
       </section>
 
+      {/* --- How it works --- */}
+      <section className="text-center">
+        <h2 className="text-2xl md:text-3xl font-semibold text-slate-900">
+          How it works
+        </h2>
+        <p className="mt-2 text-sm text-slate-500 max-w-xl mx-auto">
+          Simple steps to get your task completed.
+        </p>
+
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              n: 1,
+              title: 'Describe your task',
+              body:
+                'Tell us what you need done using smart search or by browsing categories.',
+            },
+            {
+              n: 2,
+              title: 'Choose your Tasker',
+              body:
+                'Compare profiles, reviews, and prices. Pick the best fit for your job.',
+            },
+            {
+              n: 3,
+              title: 'Get it done',
+              body:
+                'Chat, schedule, and pay securely once the work is complete.',
+            },
+          ].map((step) => (
+            <div
+              key={step.n}
+              className="flex flex-col items-center px-4 rounded-xl bg-white border border-neutral-200 shadow-sm py-6 transition-transform duration-150 hover:-translate-y-[2px] hover:shadow-md"
+            >
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${softRed.main} text-white text-sm font-semibold shadow-sm`}>
+                {step.n}
+              </div>
+              <h3 className="mt-4 text-base md:text-lg font-semibold text-slate-900">
+                {step.title}
+              </h3>
+              <p className="mt-2 text-sm text-slate-600">{step.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* --- Top Categories Row --- */}
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-4">
@@ -175,52 +230,6 @@ function Home() {
         </div>
       </section>
 
-      {/* --- How it works --- */}
-      <section className="text-center">
-        <h2 className="text-2xl md:text-3xl font-semibold text-slate-900">
-          How it works
-        </h2>
-        <p className="mt-2 text-sm text-slate-500 max-w-xl mx-auto">
-          Simple steps to get your task completed.
-        </p>
-
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              n: 1,
-              title: 'Describe your task',
-              body:
-                'Tell us what you need done using smart search or by browsing categories.',
-            },
-            {
-              n: 2,
-              title: 'Choose your Tasker',
-              body:
-                'Compare profiles, reviews, and prices. Pick the best fit for your job.',
-            },
-            {
-              n: 3,
-              title: 'Get it done',
-              body:
-                'Chat, schedule, and pay securely once the work is complete.',
-            },
-          ].map((step) => (
-            <div
-              key={step.n}
-              className="flex flex-col items-center px-4 rounded-xl bg-white border border-neutral-200 shadow-sm py-6 transition-transform duration-150 hover:-translate-y-[2px] hover:shadow-md"
-            >
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${softRed.main} text-white text-sm font-semibold shadow-sm`}>
-                {step.n}
-              </div>
-              <h3 className="mt-4 text-base md:text-lg font-semibold text-slate-900">
-                {step.title}
-              </h3>
-              <p className="mt-2 text-sm text-slate-600">{step.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* --- Testimonials --- */}
       <section className="space-y-6 mb-4">
         <h2 className="text-xl md:text-2xl font-semibold text-slate-900 text-center">
@@ -260,7 +269,7 @@ function Home() {
           ))}
         </div>
       </section>
-    </div>
+    </motion.div>
   );
 }
 

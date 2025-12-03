@@ -110,6 +110,14 @@ function ClientDashboard() {
 
       <h2 className="text-2xl font-bold mb-4">Client Dashboard</h2>
       <p className="mb-6 text-gray-700">Welcome, {user?.full_name}!</p>
+      <div className="mb-6">
+        <Link
+          to="/client/tasks"
+          className={`inline-flex items-center justify-center rounded-md ${softRed.main} px-4 py-2 text-sm font-semibold text-white ${softRed.hover} shadow-sm`}
+        >
+          View my tasks
+        </Link>
+      </div>
 
       {/* Banner when coming from Categories */}
       {fromCategory && (

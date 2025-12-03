@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './components/AdminDashboard';
 import EditService from './components/EditService';
 import ClientDashboard from './components/ClientDashboard';
+import ClientMyTasks from './components/ClientMyTasks';
 import TaskerDashboard from './components/TaskerDashboard';
 import TaskerProfile from './components/TaskerProfile';
 import EditProfile from './components/EditProfile';
@@ -72,6 +73,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ClientDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/client/tasks"
+            element={
+              <ProtectedRoute>
+                <ClientMyTasks />
               </ProtectedRoute>
             }
           />

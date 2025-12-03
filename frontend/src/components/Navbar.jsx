@@ -130,7 +130,7 @@ function Navbar() {
 
               {/* CORRECTED: Role-based dashboard links */}
               {user?.role === 'client' && (
-                <Link to="/client/dashboard" className={linkBase}>
+                <Link to="/client/tasks" className={linkBase}>
                   My Tasks
                 </Link>
               )}

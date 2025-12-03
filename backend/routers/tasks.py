@@ -445,3 +445,37 @@ async def get_my_tasker_tasks(current_user: Annotated[dict, Depends(get_current_
     tasks_cursor = tasks_collection.find(
         {"tasker_username": current_user["username"]})
     return [populate_task_details(task) for task in tasks_cursor]
+
+@router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_task(
+    task_id: str,
+    current_user: Annotated[dict, Depends(get_current_user)]
+):
+    """
+    Delete a task (clients only, and only their own tasks).
+    """
+    if current_user["role"] != "client":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only clients can delete tasks."
+        )
+
+    try:
+        task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Invalid Task ID format")
+
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found."
+        )
+
+    if task.get("client_username") != current_user["username"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only delete your own tasks."
+        )
+
+    tasks_collection.delete_one({"_id": ObjectId(task_id)})
+    return
