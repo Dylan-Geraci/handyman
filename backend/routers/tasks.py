@@ -12,7 +12,7 @@ from bson import ObjectId
 from security import get_current_user, serialize_document
 from config import gemini_model
 from database import tasks_collection, users_collection, notifications_collection, categories_collection, task_types_collection
-from models import Task, Notification, AISearchQuery, UserPublic
+from models import Task, Notification, AISearchQuery, UserPublic, RecommendationResponse
 
 
 router = APIRouter(prefix="/api", tags=["tasks"])
@@ -214,6 +214,49 @@ async def suggest_task_type(
     return {"suggestions": suggestions, "method": "keyword"}
 
 
+# --- AI-Powered Recommendations ---
+@router.get("/tasks/recommendations", response_model=RecommendationResponse)
+async def get_task_recommendations(
+    current_user: Annotated[dict, Depends(get_current_user)],
+    limit: int = 10,
+    min_score: int = 50,
+    location_radius: int = 25,
+    include_reasons: bool = True
+):
+    """
+    Get AI-powered task recommendations for tasker.
+
+    Returns a ranked list of tasks based on:
+    - Skill match (AI semantic analysis)
+    - Location proximity
+    - Task recency
+    - Historical success
+    - Difficulty match
+    - Competition level
+
+    Only taskers can access this endpoint.
+    """
+    if current_user["role"] != "tasker":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only taskers can get recommendations."
+        )
+
+    # Import here to avoid circular imports
+    from utils.recommendation_engine import RecommendationEngine
+
+    # Create recommendation engine
+    engine = RecommendationEngine(current_user, {
+        "limit": min(limit, 50),  # Max 50
+        "min_score": max(min_score, 0),  # Min 0
+        "location_radius": location_radius,
+        "include_reasons": include_reasons
+    })
+
+    # Get recommendations
+    return engine.get_recommendations()
+
+
 # --- Task CRUD ---
 @router.post("/tasks", status_code=status.HTTP_201_CREATED)
 async def create_task(
@@ -268,6 +311,16 @@ async def create_task(
 
     task_data = task.dict()
     task_data["client_username"] = current_user["username"]
+
+    # Add recommendation-related fields
+    from datetime import datetime
+    from utils.recommendation_helpers import estimate_task_difficulty
+    from utils.geocoding import geocode_location
+
+    task_data["posted_at"] = datetime.utcnow()
+    task_data["estimated_difficulty"] = estimate_task_difficulty(task_data)
+    task_data["coordinates"] = geocode_location(task_data.get("location", ""))
+    task_data["budget_range"] = None  # Can be added later if needed
 
     tasks_collection.insert_one(task_data)
     return populate_task_details(task_data)

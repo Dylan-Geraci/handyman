@@ -135,3 +135,40 @@ class CategoryWithTaskTypes(BaseModel):
     description: str
     icon_url: Optional[str] = None
     task_types: List[TaskTypeResponse]
+
+
+# --- Recommendation Models ---
+class RecommendationQuery(BaseModel):
+    """Query parameters for task recommendations."""
+    limit: Optional[int] = Field(default=10, ge=1, le=50)
+    min_score: Optional[int] = Field(default=50, ge=0, le=100)
+    location_radius: Optional[int] = Field(default=25, ge=0)
+    include_reasons: Optional[bool] = True
+
+
+class MatchBreakdown(BaseModel):
+    """Breakdown of match score components."""
+    category_match: float
+    semantic_match: float
+    distance: float
+    recency: float
+    difficulty_match: float
+    historical_success: float
+    competition: float
+
+
+class TaskRecommendation(BaseModel):
+    """Single task recommendation with match details."""
+    task: dict
+    match_score: float
+    match_breakdown: MatchBreakdown
+    distance_miles: Optional[float] = None
+    posted_minutes_ago: Optional[int] = None
+    match_reasons: Optional[List[str]] = None
+
+
+class RecommendationResponse(BaseModel):
+    """Response model for task recommendations."""
+    recommendations: List[dict]
+    total_available: int
+    showing_top: int
