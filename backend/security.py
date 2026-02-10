@@ -8,8 +8,9 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+import bcrypt
 
-from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, pwd_context
+from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from database import users_collection
 
 
@@ -18,24 +19,24 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 # --- Password Functions ---
-MAX_BCRYPT_LENGTH = 72
-
-def _truncate_for_bcrypt(password: str) -> str:
-    """Ensure password length is safe for bcrypt."""
-    if not isinstance(password, str):
-        password = str(password)
-    return password[:MAX_BCRYPT_LENGTH]
-
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash."""
-    safe = _truncate_for_bcrypt(plain_password)
-    return pwd_context.verify(safe, hashed_password)
+    """Verify a password against its hash using bcrypt."""
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8'),
+            hashed_password.encode('utf-8')
+        )
+    except Exception as e:
+        print(f"Password verification error: {e}")
+        return False
 
 
 def hash_password(password: str) -> str:
-    """Hash a password for storing."""
-    safe = _truncate_for_bcrypt(password)
-    return pwd_context.hash(safe)
+    """Hash a password for storing using bcrypt."""
+    return bcrypt.hashpw(
+        password.encode('utf-8'),
+        bcrypt.gensalt()
+    ).decode('utf-8')
 
 
 # --- JWT Token Functions ---

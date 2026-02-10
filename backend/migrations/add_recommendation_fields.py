@@ -50,7 +50,7 @@ def add_user_recommendation_fields():
         {"$set": default_user_fields}
     )
 
-    print(f"✓ Added default fields to {result.modified_count} taskers")
+    print(f"[OK] Added default fields to {result.modified_count} taskers")
 
     # Recalculate completed_tasks_count for each tasker
     print("\nRecalculating completed_tasks_count...")
@@ -84,7 +84,7 @@ def add_user_recommendation_fields():
         )
         updated_count += 1
 
-    print(f"✓ Recalculated task counts for {updated_count} taskers")
+    print(f"[OK] Recalculated task counts for {updated_count} taskers")
 
     # Recalculate avg_rating from reviews
     print("\nRecalculating avg_rating...")
@@ -105,7 +105,7 @@ def add_user_recommendation_fields():
         )
         rating_updated += 1
 
-    print(f"✓ Recalculated ratings for {rating_updated} taskers")
+    print(f"[OK] Recalculated ratings for {rating_updated} taskers")
     print()
 
 
@@ -136,7 +136,7 @@ def add_task_recommendation_fields():
         {"$set": default_task_fields}
     )
 
-    print(f"✓ Added default fields to {result.modified_count} tasks")
+    print(f"[OK] Added default fields to {result.modified_count} tasks")
     print()
 
 
@@ -150,21 +150,21 @@ def create_indexes():
     # Tasks collection indexes
     print("Creating tasks collection indexes...")
     tasks_collection.create_index([("posted_at", -1)])
-    print("✓ Created index on tasks.posted_at")
+    print("[OK] Created index on tasks.posted_at")
 
     tasks_collection.create_index([("category_id", 1), ("status", 1)])
-    print("✓ Created compound index on tasks.category_id and tasks.status")
+    print("[OK] Created compound index on tasks.category_id and tasks.status")
 
     tasks_collection.create_index([("location", "text")])
-    print("✓ Created text index on tasks.location")
+    print("[OK] Created text index on tasks.location")
 
     # Users collection indexes
     print("\nCreating users collection indexes...")
     users_collection.create_index([("service_categories", 1)])
-    print("✓ Created index on users.service_categories")
+    print("[OK] Created index on users.service_categories")
 
     users_collection.create_index([("role", 1), ("experience_level", 1)])
-    print("✓ Created compound index on users.role and users.experience_level")
+    print("[OK] Created compound index on users.role and users.experience_level")
 
     print()
 
@@ -192,17 +192,17 @@ def verify_migration():
         all_present = True
         for field in required_fields:
             present = field in sample_tasker
-            status = "✓" if present else "✗"
+            status = "[OK]" if present else "[FAIL]"
             print(f"  {status} {field}: {present}")
             if not present:
                 all_present = False
 
         if all_present:
-            print("\n✓ All user fields present")
+            print("\n[OK] All user fields present")
         else:
-            print("\n✗ Some user fields missing!")
+            print("\n[FAIL] Some user fields missing!")
     else:
-        print("⚠ No taskers found in database")
+        print("[WARNING] No taskers found in database")
 
     print()
 
@@ -220,17 +220,17 @@ def verify_migration():
         all_present = True
         for field in required_fields:
             present = field in sample_task
-            status = "✓" if present else "✗"
+            status = "[OK]" if present else "[FAIL]"
             print(f"  {status} {field}: {present}")
             if not present:
                 all_present = False
 
         if all_present:
-            print("\n✓ All task fields present")
+            print("\n[OK] All task fields present")
         else:
-            print("\n✗ Some task fields missing!")
+            print("\n[FAIL] Some task fields missing!")
     else:
-        print("⚠ No tasks found in database")
+        print("[WARNING] No tasks found in database")
 
     print()
 
@@ -238,11 +238,9 @@ def verify_migration():
 def main():
     """Run the migration."""
     print("\n")
-    print("╔" + "═" * 58 + "╗")
-    print("║" + " " * 58 + "║")
-    print("║" + "  RECOMMENDATION SYSTEM DATABASE MIGRATION  ".center(58) + "║")
-    print("║" + " " * 58 + "║")
-    print("╚" + "═" * 58 + "╝")
+    print("=" * 60)
+    print("   RECOMMENDATION SYSTEM DATABASE MIGRATION")
+    print("=" * 60)
     print("\n")
 
     try:
@@ -261,10 +259,10 @@ def main():
         print("=" * 60)
         print("MIGRATION COMPLETED SUCCESSFULLY")
         print("=" * 60)
-        print("\n✓ Users collection updated")
-        print("✓ Tasks collection updated")
-        print("✓ Database indexes created")
-        print("✓ Migration verified")
+        print("\n[OK] Users collection updated")
+        print("[OK] Tasks collection updated")
+        print("[OK] Database indexes created")
+        print("[OK] Migration verified")
         print("\nYou can now use the recommendation system!")
         print()
 
