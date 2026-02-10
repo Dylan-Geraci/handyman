@@ -1,676 +1,232 @@
-# HANDYMAN PLATFORM - IMPLEMENTATION CONTEXT & FUTURE CHANGES
+# HANDYMAN PLATFORM - DATABASE SCHEMA & BACKEND STRUCTURE
 
-## OVERVIEW
-This document outlines the current implementation status of the handyman platform and identifies specific changes needed to match the desired workflow requirements.
+## DATABASE SCHEMA
+
+### Collections Overview
+The platform uses MongoDB with 10 collections:
+1. users - User accounts (clients/taskers)
+2. tasks - Job postings
+3. reviews - Task ratings
+4. messages - Chat messages
+5. notifications - User notifications
+6. services - Admin service listings
+7. portfolio_items - Admin portfolio
+8. contact_requests - Contact form submissions
+9. categories - Task categories
+10. task_types - Specific task types within categories
 
 ---
 
-## CURRENT IMPLEMENTATION STATUS (WHAT'S WORKING)
+## COLLECTION SCHEMAS
 
-### 1. User Registration & Login 
-- **Backend Endpoints:**
-  - POST /register (main.py:233-245) - Creates users with role selection (client/tasker)
-  - POST /token (main.py:247-260) - OAuth2 JWT authentication
-  - GET /users/me (main.py:284-286) - Get authenticated user profile
+### 1. users
+```
+{
+  _id: ObjectId,
+  username: string,
+  full_name: string,
+  hashed_password: string,
+  role: string ("client" | "tasker"),
+  location: string (optional),
+  skills: [string] (optional, taskers only),
+  profile_image_url: string (optional),
+  bio: string (optional),
+  service_categories: [string] (optional, array of category_id references for taskers),
+  created_at: datetime,
 
-- **Frontend Components:**
-  - Register.jsx - Role selection, skills/location for taskers
-  - Login.jsx - Email/password with role-based dashboard routing
-  - AuthContext.jsx - Token persistence, auto-login
-
-- **Status:** FULLY FUNCTIONAL
-- **Test Coverage:** Both client and tasker can register and login successfully
-
-### 2. Task Posting (Client) 
-- **Backend Endpoint:**
-  - POST /api/tasks (main.py:336-345) - Creates task with title, description, location
-  - Sets status to "open" by default
-  - Assigns client_username automatically
-
-- **Frontend Component:**
-  - ClientDashboard.jsx (lines 1-147) - Task posting form
-
-- **Database Schema (tasks collection):**
-  ```
-  {
-    _id: ObjectId,
-    title: string,
-    description: string,
-    location: string,
-    status: string ("open", "in_progress", "completed"),
-    client_username: string,
-    tasker_username: string (optional)
+  // Recommendation system fields (taskers only):
+  experience_level: int (1=beginner, 2=intermediate, 3=expert),
+  completed_tasks_count: int (cached for performance),
+  avg_rating: float (cached from reviews),
+  preferred_locations: [string] (array of preferred work locations),
+  last_active: datetime,
+  coordinates: {
+    lat: float,
+    lng: float
   }
-  ```
+}
+```
 
-- **Status:** FULLY FUNCTIONAL
-- **Test Coverage:** Clients can post tasks, tasks appear in database with "open" status
+### 2. tasks
+```
+{
+  _id: ObjectId,
+  title: string,
+  description: string,
+  location: string,
+  category_id: string (required, reference to categories),
+  task_type_id: string (required, reference to task_types),
+  status: string ("open" | "in_progress" | "completed"),
+  client_username: string,
+  tasker_username: string (optional),
 
-### 3. Task Viewing (Tasker) 
-- **Backend Endpoint:**
-  - GET /api/tasks (main.py:347-366) - Filters by status="open", location, search query
+  // Recommendation system fields:
+  posted_at: datetime (UTC timestamp),
+  budget_range: string (optional, e.g., "$50-$75"),
+  estimated_difficulty: int (1-3, AI-generated),
+  coordinates: {
+    lat: float,
+    lng: float
+  }
+}
+```
 
-- **Frontend Component:**
-  - TaskerDashboard.jsx (lines 1-145) - Lists available jobs with search/filter
+### 3. reviews
+```
+{
+  _id: ObjectId,
+  task_id: string,
+  tasker_username: string,
+  client_username: string,
+  rating: int (1-5),
+  comment: string (optional),
+  timestamp: datetime
+}
+```
 
-- **Status:** FULLY FUNCTIONAL
-- **Test Coverage:** Taskers can view all open tasks with working search functionality
+### 4. messages
+```
+{
+  _id: ObjectId,
+  task_id: string,
+  sender_username: string,
+  content: string,
+  timestamp: datetime
+}
+```
 
-### 4. Real-Time Chat 
-- **Backend Endpoints:**
-  - GET /api/messages/{task_id} (main.py:459-471) - Fetch chat history
-  - WebSocket /ws/{task_id}/{token} (main.py:473-504) - Real-time messaging
+### 5. notifications
+```
+{
+  _id: ObjectId,
+  user_to_notify: string,
+  message: string,
+  link: string (optional),
+  is_read: bool,
+  timestamp: datetime
+}
+```
 
-- **Frontend Component:**
-  - Chat.jsx (lines 1-140) - WebSocket chat interface
+### 6. services
+```
+{
+  _id: ObjectId,
+  name: string,
+  description: string
+}
+```
 
-- **Status:** FULLY FUNCTIONAL
-- **Test Coverage:** Client and tasker can chat in real-time during task
+### 7. portfolio_items
+```
+{
+  _id: ObjectId,
+  title: string,
+  description: string,
+  image_url: string
+}
+```
 
-### 5. Review System 
-- **Backend Endpoint:**
-  - POST /api/reviews (main.py:434-456) - Client can review completed tasks
+### 8. contact_requests
+```
+{
+  _id: ObjectId,
+  name: string,
+  email: string,
+  message: string,
+  timestamp: datetime
+}
+```
 
-- **Frontend Component:**
-  - LeaveReview.jsx (lines 1-82) - 5-star rating modal
+### 9. categories
+```
+{
+  _id: ObjectId,
+  name: string,
+  description: string,
+  icon_url: string (optional)
+}
+```
 
-- **Status:** FULLY FUNCTIONAL
-
----
-
-## WORKFLOW GAP ANALYSIS
-
-### CURRENT WORKFLOW:
-1. Client posts task � status: "open"
-2. Tasker **DIRECTLY ACCEPTS** task � status: "in_progress" (tasker_username assigned)
-3. Client marks complete � status: "completed"
-
-### DESIRED WORKFLOW (PER USER REQUIREMENTS):
-1. Client posts task � status: "open"
-2. Tasker **OFFERS TO TAKE** task � status: needs intermediate state or offer tracking
-3. **CLIENT REVIEWS AND ACCEPTS** the tasker's offer � status: "booked" or "in_progress"
-4. **EITHER client OR tasker** marks complete � status: "completed"
-
-### KEY DIFFERENCES:
-1. L Missing: Two-step acceptance process (offer � client approval)
-2. L Missing: Tasker ability to mark tasks complete
-
----
-
-## USER MODEL ARCHITECTURE (TASKER-SIDED APPROACH)
-
-### CURRENT MODEL:
-- Users choose `role: "client"` OR `role: "tasker"` at registration
-- Roles are mutually exclusive
-- Role determines all permissions
-
-### DESIRED MODEL (PER MENTOR GUIDANCE):
-- **All users are clients by default** - can post tasks, hire taskers
-- **Users can optionally become taskers** - sign up separately to accept tasks
-- This mirrors platforms like Uber (everyone can ride, drivers sign up separately)
-
-### IMPLEMENTATION REQUIREMENTS:
-1. **User Schema Changes:**
-   - Add `is_tasker: bool = False` to user document
-   - Add `phone: str` field
-   - Add `zip_code: str` field (replaces general location for clients)
-   - Keep tasker-specific fields (skills, service_categories, etc.) populated when becoming tasker
-
-2. **Client Registration Fields (Required for all users):**
-   - `full_name` - User's name
-   - `username` - Email address (used for login)
-   - `phone` - Phone number
-   - `password` - Account password
-   - `zip_code` - User's zip code
-
-3. **Tasker Enrollment Fields (TBD):**
-   - Additional information required when becoming a tasker
-   - Likely: skills, service_categories, bio, profile_image_url
-   - To be finalized based on what information is needed to match taskers with jobs
-
-5. **New "Become a Tasker" Flow:**
-   - Endpoint: `POST /users/me/become-tasker`
-   - Collects: skills, service_categories, etc. (TBD)
-   - Sets `is_tasker: True`
-
-6. **Authorization Logic Changes:**
-   - Client actions (create task, search taskers): Any authenticated user
-   - Tasker actions (view open tasks, accept tasks): Only if `is_tasker == True`
-
-7. **Database Migration:**
-   - Existing `role: "tasker"` users → `is_tasker: True`
-   - Existing `role: "client"` users → `is_tasker: False`
-
-### IMPLEMENTATION TIMING:
-This should be implemented before or alongside Phase 3 (Tasker Profile Enhancement), as it fundamentally changes how tasker profiles work.
-
----
-
-## CURRENT FOCUS: CATEGORIZATION & SEARCH FEATURE
-
-This is our current implementation priority. All other features are on hold until this is complete.
-
----
-
-## CATEGORIZATION & SEARCH - PHASE-BY-PHASE IMPLEMENTATION PLAN
-
-### **PHASE 1: Database Schema & Seed Data** ✅ COMPLETED
-
-#### Backend Tasks:
-1. **Create `categories` collection**
-   - Schema:
-     ```
-     {
-       _id: ObjectId,
-       name: string,
-       description: string,
-       icon_url: string (optional)
-     }
-     ```
-   - Add index on `name` for fast lookup
-
-2. **Create `task_types` collection**
-   - Schema:
-     ```
-     {
-       _id: ObjectId,
-       name: string,
-       description: string,
-       category_id: string (reference to categories),
-       keywords: [string] (for search optimization)
-     }
-     ```
-   - Add indexes on `name`, `category_id`, and `keywords`
-
-3. **Update `users` collection schema**
-   - Add field: `service_categories: [string]` (array of category_id references)
-   - Only applicable for role="tasker"
-
-4. **Update `tasks` collection schema**
-   - Add field: `category_id: string`
-   - Add field: `task_type_id: string`
-   - Both fields required for new tasks
-
-5. **Create seed data script** (`backend/seed_categories.py`)
-   - Populate categories based on TaskRabbit research (10 main categories)
-   - Populate task_types for each category (~200 task types total)
-   - Script should be idempotent (can run multiple times safely)
-   - Categories to implement:
-     1. Handyman & Home Repairs
-     2. Furniture Assembly
-     3. Mounting & Installation
-     4. Moving & Heavy Lifting
-     5. Cleaning Services
-     6. Yard Work & Outdoor Maintenance
-     7. Delivery & Errands
-     8. Personal Assistant & Organization
-     9. Seasonal Services
-     10. Specialty Services
-
-**Deliverable:** Database collections created, seed script ready to populate TaskRabbit-based data
+### 10. task_types
+```
+{
+  _id: ObjectId,
+  name: string,
+  description: string,
+  category_id: string (reference to categories),
+  keywords: [string] (for search optimization)
+}
+```
 
 ---
 
-### **PHASE 2: Backend API - Categories & Task Types** ✅ COMPLETED
+## DATABASE INDEXES
 
-#### Backend Tasks:
-1. **Create Pydantic Models** (in main.py)
-   ```python
-   class Category(BaseModel):
-       id: str
-       name: str
-       description: str
-       icon_url: Optional[str] = None
-
-   class TaskType(BaseModel):
-       id: str
-       name: str
-       description: str
-       category_id: str
-       keywords: List[str] = []
-
-   class CategoryWithTaskTypes(BaseModel):
-       id: str
-       name: str
-       description: str
-       icon_url: Optional[str] = None
-       task_types: List[TaskType]
-   ```
-
-2. **Implement Endpoints:**
-   - `GET /api/categories` - List all categories
-   - `GET /api/categories/{id}` - Get single category details
-   - `GET /api/categories/{id}/task-types` - Get all task types for a category
-   - `GET /api/task-types` - List all task types (optional query: ?category_id={id})
-   - `GET /api/task-types/{id}` - Get single task type
-   - `GET /api/task-types/search?q={query}` - Search task types by name/keywords
-
-3. **Add proper validation:**
-   - Verify IDs exist before returning
-   - Return 404 for not found
-   - Handle database errors gracefully
-
-**Deliverable:** RESTful API for browsing and searching categories/task types
+Performance indexes created for recommendation system:
+1. tasks.posted_at (descending) - Fast sorting by recency
+2. tasks.category_id + status (compound) - Efficient category filtering
+3. tasks.location (text) - Location-based search
+4. users.service_categories - Tasker skill matching
+5. users.role + experience_level (compound) - Experience-based filtering
 
 ---
 
-### **PHASE 3: Backend API - User Model & Tasker Enrollment**
+## BACKEND FILE STRUCTURE
 
-#### Backend Tasks:
-1. **Update User Schema & Registration** (`POST /register`)
-   - Update UserCreate model: remove role, add phone, zip_code
-   - All users register as clients by default
-   - Set `is_tasker: False` on new users
-   - Registration fields: full_name, username (email), phone, password, zip_code
+### config.py
+Purpose: Loads all settings and external service configurations.
 
-2. **Create "Become a Tasker" Endpoint** (`POST /users/me/become-tasker`)
-   - Collects tasker-specific info: service_categories, skills, bio, profile_image_url (TBD)
-   - Validate category IDs exist in database
-   - Sets `is_tasker: True`
-   - Only allowed for users where `is_tasker == False`
+Contains:
+- Environment variables (SECRET_KEY, DATABASE_URL, GOOGLE_API_KEY)
+- JWT settings (algorithm, expiration time)
+- Password hasher setup
+- Gemini AI model initialization
 
-3. **Update Profile Endpoint** (`PUT /users/me`)
-   - Allow updating `service_categories` field only if `is_tasker == True`
-   - Validate all category IDs exist
-   - Return updated profile
+Why separate: Settings are loaded once at startup and imported everywhere. Keeps sensitive config in one place.
 
-4. **Update Authorization Checks** (throughout `routers/tasks.py`)
-   - Replace `role != "client"` checks with general auth (any user can be a client)
-   - Replace `role != "tasker"` checks with `is_tasker != True`
+### database.py
+Purpose: Connects to MongoDB and defines all collection references.
 
-5. **Enhance Tasker Public Profile** (`GET /api/taskers/{username}`)
-   - Include populated service categories (not just IDs, but full category objects)
-   - Show category names in response
+Contains:
+- MongoDB client connection
+- All collection variables (users_collection, tasks_collection, categories_collection, etc.)
 
-6. **Database Migration Script**
-   - Add `is_tasker`, `phone`, `zip_code` fields to existing users
-   - Existing `role: "tasker"` users → `is_tasker: True`
-   - Existing `role: "client"` users → `is_tasker: False`
+Why separate: Any file can do `from database import users_collection` instead of setting up the connection themselves.
 
-**Deliverable:** New user model implemented; users can enroll as taskers
+### models.py
+Purpose: Defines the shape of data going in/out of the API.
 
----
+Contains:
+- Pydantic models for request validation (UserCreate, Task, Review)
+- Pydantic models for responses (UserPublic, CategoryResponse)
+- Recommendation models (RecommendationQuery, TaskRecommendation, MatchBreakdown)
 
-### **PHASE 4: Backend API - Task Categorization & Filtering**
+Why separate: Models are used across multiple routers. Centralizing them prevents circular imports.
 
-#### Backend Tasks:
-1. **Update Task Creation** (`POST /api/tasks`)
-   - Add required fields: `category_id` and `task_type_id`
-   - Validate both IDs exist in database
-   - Validate task_type belongs to specified category
-   - Store with task document
+### security.py
+Purpose: Authentication and authorization utilities.
 
-2. **Enhance Task Listing** (`GET /api/tasks`)
-   - Add query parameters:
-     - `?category_id={id}` - Filter by category
-     - `?task_type_id={id}` - Filter by task type
-     - `?location={loc}` - Existing location filter
-   - Support combined filters
-   - Return tasks with populated category and task_type details
-
-3. **Create Task Matching Endpoint** (`GET /api/tasks/matches`)
-   - Protected endpoint (tasker only)
-   - Returns tasks where task.category_id matches ANY of tasker's service_categories
-   - Filter by status="open"
-   - Sort by relevance (category match + location proximity)
-   - Include reason for match in response
-
-**Deliverable:** Tasks are categorized; taskers see relevant matches
+Contains:
+- hash_password() / verify_password() - Password hashing
+- create_access_token() - JWT token creation
+- get_current_user() - FastAPI dependency that validates tokens
+- serialize_document() - Converts MongoDB docs to JSON
 
 ---
 
-### **PHASE 5: Backend API - AI-Powered Search**
-
-#### Backend Tasks:
-1. **Create AI Search Service**
-   - Build function to call Google Gemini 2.5 API
-   - Prompt: "Given this user query, identify the most relevant category and task type from our list: [provide categories and task types]. Return JSON with suggested_category and suggested_task_type."
-   - Parse AI response to extract structured data
-   - Implement fallback to keyword search if AI fails
-
-2. **Create Search Endpoint** (`POST /api/search/intelligent`)
-   - Request body: `{ "query": "I need someone to put together furniture" }`
-   - Response:
-     ```json
-     {
-       "query": "I need someone to put together furniture",
-       "suggested_category": "Furniture Assembly",
-       "suggested_category_id": "...",
-       "suggested_task_type": "General furniture assembly",
-       "suggested_task_type_id": "...",
-       "all_matches": [...] // Array of matching task types
-     }
-     ```
-   - Handle GOOGLE_API_KEY missing gracefully
-
-3. **Add Pydantic Models:**
-   ```python
-   class AISearchQuery(BaseModel):
-       query: str
-
-   class AISearchResponse(BaseModel):
-       query: str
-       suggested_category: Optional[str]
-       suggested_category_id: Optional[str]
-       suggested_task_type: Optional[str]
-       suggested_task_type_id: Optional[str]
-       all_matches: List[TaskType]
-   ```
-
-**Deliverable:** AI-powered natural language search that simplifies queries to categories
-
----
-
-### **PHASE 6: Frontend - Registration & Tasker Enrollment**
-
-#### Frontend Tasks:
-1. **Simplify Register Component** (`frontend/src/components/Register.jsx`)
-   - Remove role selection (all users are clients)
-   - Collect only client fields: full_name, email, phone, password, zip_code
-   - Clean, simple registration form
-   - Redirect to dashboard after registration
-
-2. **Create "Become a Tasker" Component** (`frontend/src/components/BecomeTasker.jsx`)
-   - Accessible from user profile or dashboard
-   - Fetch categories from `GET /api/categories`
-   - Collect tasker info: service_categories, skills, bio, profile photo (TBD)
-   - Implement multi-select UI for categories:
-     - Option A: Checkbox grid
-     - Option B: Tag/chip selector
-     - Option C: Dropdown multi-select
-   - Validate at least one category selected
-   - Call `POST /users/me/become-tasker` endpoint
-   - Show success message and update UI to reflect tasker status
-
-3. **Styling:**
-   - Use TailwindCSS for consistent design
-   - Add visual indicators (icons/images for categories)
-   - Responsive design for mobile
-   - Show category descriptions on hover/click
-
-**Deliverable:** Simple client registration + separate tasker enrollment flow
-
----
-
-### **PHASE 7: Frontend - Profile Management Enhancement**
-
-#### Frontend Tasks:
-1. **Update EditProfile Component** (`frontend/src/components/EditProfile.jsx`)
-   - Add "My Service Categories" section (only for taskers)
-   - Fetch current user's service categories
-   - Display selected categories with ability to add/remove
-   - Save changes via `PUT /users/me` endpoint
-   - Show success/error messages
-
-2. **UI Components:**
-   - Display current categories as tags/chips
-   - "Add Category" button to select new ones
-   - "Remove" button on each category chip
-   - Confirmation before removing
-
-**Deliverable:** Taskers manage service categories from their profile
-
----
-
-### **PHASE 8: Frontend - Category Navigation UI**
-
-#### Frontend Tasks:
-1. **Create CategoryBrowser Component** (`frontend/src/components/CategoryBrowser.jsx`)
-   - Fetch all categories from API
-   - Display as grid of cards (similar to TaskRabbit homepage)
-   - Each card shows: category name, icon, description, task count
-   - Click card → show task types dropdown/modal
-   - Responsive grid layout
-
-2. **Create TaskTypeList Component** (`frontend/src/components/TaskTypeList.jsx`)
-   - Props: `categoryId`, `userRole`
-   - Display all task types for selected category
-   - Different behavior based on user role:
-     - **Client**: Click task type → navigate to task creation with pre-filled category/type
-     - **Tasker**: Click task type → navigate to task list filtered by that type
-   - Show task type descriptions
-
-3. **Integration:**
-   - Add CategoryBrowser to Home page
-   - Add to ClientDashboard (browse tasks to create)
-   - Add to TaskerDashboard (browse available work)
-
-**Deliverable:** Users browse categories and drill down to task types
-
----
-
-### **PHASE 9: Frontend - Task Creation Enhancement**
-
-#### Frontend Tasks:
-1. **Update ClientDashboard** (`frontend/src/components/ClientDashboard.jsx`)
-   - Add "Category" dropdown to task creation form
-   - Add "Task Type" dropdown (filtered by selected category)
-   - Make both fields required
-   - Fetch categories and task types from API
-   - Pre-fill if coming from CategoryBrowser (via URL params or React state)
-   - Show helpful descriptions/placeholders
-
-2. **Form Flow:**
-   ```
-   1. User selects category → task types load
-   2. User selects task type
-   3. User fills title, description, location
-   4. Submit creates categorized task
-   ```
-
-**Deliverable:** Clients create properly categorized tasks
-
----
-
-### **PHASE 10: Frontend - Tasker Task Discovery**
-
-#### Frontend Tasks:
-1. **Update TaskerDashboard** (`frontend/src/components/TaskerDashboard.jsx`)
-   - Add category and task type filter dropdowns above task list
-   - Filter tasks in real-time based on selection
-   - Show task count for each filter option
-   - "Clear Filters" button
-
-2. **Create TaskMatches Component** (`frontend/src/components/TaskMatches.jsx`)
-   - New page/tab for taskers
-   - Fetch from `GET /api/tasks/matches`
-   - Display tasks matching their service categories
-   - Show match reason badge (e.g., "Matches your Assembly category")
-   - Sort by relevance
-   - "View All Tasks" button to see non-matched tasks
-
-3. **Add Navigation:**
-   - Add "Matches" link to Navbar (tasker only)
-   - Add route: `/tasker/matches` to App.jsx
-   - Protected route
-
-**Deliverable:** Taskers discover relevant tasks via categories and matches page
-
----
-
-### **PHASE 11: Frontend - Search Implementation**
-
-#### Frontend Tasks:
-1. **Create SearchBar Component** (`frontend/src/components/SearchBar.jsx`)
-   - Unified search bar for platform
-   - Text input with search icon
-   - "Search" button
-   - Optional: Voice search integration (Web Speech API)
-
-2. **Create SearchResults Component** (`frontend/src/components/SearchResults.jsx`)
-   - Call `POST /api/search/intelligent` with query
-   - Display AI suggestions prominently
-   - Show category and task type matches
-   - Different CTAs based on user role:
-     - **Client**: "Create Task" button → pre-filled task form
-     - **Tasker**: "View Tasks" button → filtered task list
-   - Fallback UI if AI returns no results
-
-3. **Integration:**
-   - Add SearchBar to Navbar
-   - Create `/search` route
-   - Handle search from anywhere on site
-   - Show loading state during AI processing
-
-**Deliverable:** Natural language search with AI-powered category suggestions
-
----
-
-### **PHASE 12: Testing & Quality Assurance**
-
-#### Testing Tasks:
-1. **Backend API Testing:**
-   - Test all new endpoints with Postman/curl
-   - Verify data validation (invalid IDs, missing fields)
-   - Test edge cases (empty results, malformed requests)
-   - Test AI search with various queries
-   - Verify fallback when Gemini API unavailable
-
-2. **Frontend User Flow Testing:**
-   - Tasker registration with category selection
-   - Tasker profile editing (add/remove categories)
-   - Client browsing categories → creating task
-   - Tasker browsing categories → viewing tasks
-   - Search functionality (text and voice)
-   - Matches page showing relevant tasks
-   - Filters working correctly on task lists
-
-3. **Cross-Browser & Device Testing:**
-   - Chrome, Firefox, Safari, Edge
-   - Mobile responsive design
-   - Touch interactions on mobile
-
-4. **Integration Testing:**
-   - Complete end-to-end workflows
-   - Verify notifications integrate properly
-   - Check chat integration with categorized tasks
-   - Verify review system works with categories
-
-**Deliverable:** Fully tested feature with no critical bugs
-
----
-
-### **PHASE 13: Documentation & Deployment**
-
-#### Deployment Tasks:
-1. **Update Documentation:**
-   - Update README.md with categorization feature
-   - Document new API endpoints
-   - Add category list to documentation
-   - Create user guide for category system
-
-2. **Database Migration:**
-   - Run seed script on production/staging database
-   - Verify all categories and task types populated
-   - Handle existing tasks (assign default category if needed)
-   - Verify data integrity
-
-3. **Deploy:**
-   - Deploy backend changes to production
-   - Deploy frontend changes to production
-   - Monitor error logs
-   - Verify API key configured for Gemini
-
-4. **Post-Deployment Verification:**
-   - Test all features in production
-   - Monitor performance
-   - Check error rates
-   - Gather initial user feedback
-
-**Deliverable:** Feature live in production with full documentation
-
----
-
-## RECOMMENDED EXECUTION ORDER
-
-1. Phase 1 - Database foundation
-2. Phase 2 - Categories API
-3. Phase 3 - Tasker profile API
-4. Phase 4 - Task categorization API
-5. Phase 5 - AI search API
-6. Phase 6 - Registration UI
-7. Phase 7 - Profile UI
-8. Phase 8 - Category navigation UI
-9. Phase 9 - Task creation UI
-10. Phase 10 - Task discovery UI
-11. Phase 11 - Search UI
-12. Phase 12 - Testing
-13. Phase 13 - Deployment
-
-**Execution Strategy:** Complete each phase fully before moving to the next. Write production-quality, well-documented code at each step.
-
----
-
-## SUCCESS CRITERIA
-
-### Feature Complete When:
-- ✅ Taskers can select/edit service categories
-- ✅ Tasks are categorized by category + task type
-- ✅ Users can browse categories → task types
-- ✅ Clients can create categorized tasks
-- ✅ Taskers can filter tasks by category/type
-- ✅ Taskers have a "Matches" page showing relevant tasks
-- ✅ Search works with natural language (AI-powered)
-- ✅ Search falls back gracefully if AI unavailable
-- ✅ All features mobile-responsive
-- ✅ No critical bugs
-- ✅ Documentation complete
-
----
-
-## TECHNICAL DECISIONS PENDING
-
-Before starting Phase 1, confirm:
-1. **Data Model:** Separate collections (categories + task_types) or embedded?
-2. **Tasker Profile:** Select categories only, or individual task types?
-3. **AI Fallback:** Keyword search, error message, or hybrid approach?
-4. **Initial Scope:** All 10 categories, core 5, or MVP 3?
-
----
-
-## END OF CATEGORIZATION & SEARCH IMPLEMENTATION PLAN
-
-config.py
-
-  Purpose: Loads all settings and external service configurations.
-
-  Contains:
-  - Environment variables (SECRET_KEY, DATABASE_URL, GOOGLE_API_KEY)
-  - JWT settings (algorithm, expiration time)
-  - Password hasher setup
-  - Gemini AI model initialization
-
-  Why separate: Settings are loaded once at startup and imported everywhere. Keeps sensitive config in one place.
-
-  ---
-  database.py
-
-  Purpose: Connects to MongoDB and defines all collection references.
-
-  Contains:
-  - MongoDB client connection
-  - All collection variables (users_collection, tasks_collection, categories_collection, etc.)
-
-  Why separate: Any file can do from database import users_collection instead of setting up the connection themselves.
-
-  ---
-  models.py
-
-  Purpose: Defines the shape of data going in/out of the API.
-
-  Contains:
-  - Pydantic models for request validation (UserCreate, Task, Review)
-  - Pydantic models for responses (UserPublic, CategoryResponse)
-
-  Why separate: Models are used across multiple routers. Centralizing them prevents circular imports.
-
-  ---
-  security.py
-
-  Purpose: Authentication and authorization utilities.
-
-  Contains:
-  - hash_password() / verify_password() - Password hashing
-  - create_access_token() - JWT token creation
-  - get_current_user() - FastAPI dependency that validates tokens
-  - serialize_document() - Converts MongoDB docs to JSON
+## CURRENT FEATURES
+
+### Working Features
+- User registration & login (client/tasker roles)
+- Task posting (clients)
+- Task viewing & search (taskers)
+- Real-time WebSocket chat
+- Review system (5-star ratings)
+- AI-powered task recommendations
+- Category & task type system
+
+### Recent Additions
+- AI recommendation engine with 7-factor scoring algorithm
+- Database migration for recommendation fields
+- GET /api/tasks/recommendations endpoint
+- Geocoding utilities for distance calculations
