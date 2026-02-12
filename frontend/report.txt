@@ -132,4 +132,44 @@ overall
 - Both the tasker and client experience improved a lot today.
 
 
-################### TODO: AWAIT FOR ORDERS o7 ###################
+02/11/2026 - Beatriz
+
+backend setup + debugging
+- Resumed the cluster and confirmed the DATABASE_URL/env vars were correct
+- Successfully launched the backend locally
+
+frontend <-> backend integration (Dylan’s backend updates)
+- Reviewed Dylan’s backend progress report and new endpoints (categories/task types, task matching, browse taskers, AI search + suggest-type)
+- Added/updated frontend API helpers (endpoints.js) to support:
+  - GET /api/categories
+  - GET /api/task-types?category_id=...
+  - POST /api/tasks
+  - GET /api/tasks (filters: category_id, task_type_id, location, q)
+  - GET /api/tasks/matches
+  - GET /api/taskers/browse
+  - GET /api/taskers/{username}
+  - POST /api/taskers/ai-search
+  - POST /api/tasks/suggest-type
+- Created/updated CreateTaskPage to fetch categories, fetch task types by selected category, and submit create-task payload
+
+navbar validation
+- Confirmed navbar role-based links behave correctly (client vs tasker vs admin)
+- Verified notifications polling and unread count logic still works
+
+testing / verification
+- Verified backend runs end-to-end after cluster resume
+- Confirmed categories load on the frontend
+- Confirmed task types update when category changes
+- Confirmed create task request submits without crashing
+- Reviewed what to test next (task matching, AI search, recommended tasks flow)
+
+homepage redesign iteration
+- Redid homepage visuals to be more eye-catching
+- Implemented full-page gradient background (not just hero section)
+- Added glow accents behind content for depth
+- Kept subtle framer-motion animations (no over-the-top movement)
+- Switched top categories from emoji chips to image-based tiles for a cleaner look
+- Refined spacing, card styling, and hover states to feel more modern
+
+repo / workflow
+- Synced work with the branch changes and documented everything for commit/push
