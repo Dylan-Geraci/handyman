@@ -1,27 +1,36 @@
-import { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+// src/context/AuthContext.jsx
+import { createContext, useState, useEffect } from "react";
+import axios from "axios";
 
 export const AuthContext = createContext();
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// If your backend uses /api/users/me instead, change this one line:
+const ME_ENDPOINT = `${API_BASE}/users/me`;
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // To handle initial load
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const storedToken = localStorage.getItem('token');
+      const storedToken = localStorage.getItem("token");
+
       if (storedToken) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+        axios.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
         try {
-          const response = await axios.get('http://localhost:8000/users/me');
+          const response = await axios.get(ME_ENDPOINT);
           setUser(response.data);
           setToken(storedToken);
         } catch (error) {
-          // Token is invalid, so clear it
-          localStorage.removeItem('token');
+          localStorage.removeItem("token");
+          delete axios.defaults.headers.common["Authorization"];
+          setUser(null);
+          setToken(null);
         }
       }
+
       setLoading(false);
     };
 
@@ -29,30 +38,28 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (newToken) => {
-    localStorage.setItem('token', newToken);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    localStorage.setItem("token", newToken);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+
     try {
-      const response = await axios.get('http://localhost:8000/users/me');
+      const response = await axios.get(ME_ENDPOINT);
       setUser(response.data);
       setToken(newToken);
-      return response.data; // Return the user object on success
+      return response.data;
     } catch (error) {
-      logout(); // If fetching user fails, log them out completely
+      logout();
       return null;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    localStorage.removeItem("token");
+    delete axios.defaults.headers.common["Authorization"];
     setToken(null);
     setUser(null);
   };
 
-  // Don't render the app until we've checked for a token
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
 
   return (
     <AuthContext.Provider value={{ token, user, login, logout }}>

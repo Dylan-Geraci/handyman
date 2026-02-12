@@ -9,7 +9,6 @@ function Navbar() {
   const { token, user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Your existing state and logic for notifications (this is correct)
   const [notifications, setNotifications] = useState([]);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
@@ -19,7 +18,7 @@ function Navbar() {
       const response = await axios.get('http://localhost:8000/api/notifications');
       setNotifications(response.data);
     } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+      console.error('Failed to fetch notifications:', error);
     }
   };
 
@@ -35,18 +34,17 @@ function Navbar() {
     logout();
     navigate('/login');
   };
-  
+
   const handleMarkAsRead = async (notificationId) => {
     try {
       await axios.put(`http://localhost:8000/api/notifications/${notificationId}/read`);
       fetchNotifications();
     } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+      console.error('Failed to mark notification as read:', error);
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
-
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
   const linkBase = `text-sm font-medium ${neutrals.mainText} hover:text-[#E65A5A] transition-colors`;
 
   return (
@@ -58,7 +56,7 @@ function Navbar() {
             Home
           </Link>
 
-          {/* CORRECTED: Show these public links ONLY if the user is LOGGED OUT */}
+          {/* Public links only if logged out */}
           {!token && (
             <>
               <Link to="/services" className={linkBase}>
@@ -73,12 +71,12 @@ function Navbar() {
             </>
           )}
 
-          {/* Categories should be visible to everyone */}
+          {/* Categories visible to everyone */}
           <Link to="/categories" className={linkBase}>
             Categories
           </Link>
 
-          {/* Show "Find a Tasker" link only to logged-in clients */}
+          {/* Logged-in client link */}
           {user && user.role === 'client' && (
             <Link
               to="/find-tasker"
@@ -87,14 +85,20 @@ function Navbar() {
               Find a Tasker
             </Link>
           )}
+
+          {/* NEW: Tasker recommendations link */}
+          {user && user.role === 'tasker' && (
+            <Link to="/tasker/recommendations" className={linkBase}>
+              Recommended Tasks
+            </Link>
+          )}
         </div>
 
         {/* --- Right Side Links (Dynamic Part) --- */}
         <div className="flex items-center space-x-4 text-sm">
           {token ? (
-            // If a user IS logged in
             <>
-              {/* Your working notification bell */}
+              {/* Notification bell */}
               <div className="relative">
                 <button
                   onClick={() => setIsPanelOpen(!isPanelOpen)}
@@ -121,14 +125,11 @@ function Navbar() {
                   )}
                 </button>
                 {isPanelOpen && (
-                  <NotificationsPanel
-                    notifications={notifications}
-                    onMarkAsRead={handleMarkAsRead}
-                  />
+                  <NotificationsPanel notifications={notifications} onMarkAsRead={handleMarkAsRead} />
                 )}
               </div>
 
-              {/* CORRECTED: Role-based dashboard links */}
+              {/* Role-based dashboard links */}
               {user?.role === 'client' && (
                 <Link to="/client/tasks" className={linkBase}>
                   My Tasks
@@ -144,7 +145,7 @@ function Navbar() {
                   Admin Panel
                 </Link>
               )}
-              
+
               <button
                 onClick={handleLogout}
                 className="bg-slate-900 hover:bg-black text-white font-semibold py-1.5 px-3 rounded-full text-xs sm:text-sm transition-colors"
@@ -153,12 +154,8 @@ function Navbar() {
               </button>
             </>
           ) : (
-            // If the user IS NOT logged in
             <>
-              <Link
-                to="/login"
-                className={linkBase}
-              >
+              <Link to="/login" className={linkBase}>
                 Login
               </Link>
               <Link

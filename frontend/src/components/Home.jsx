@@ -1,178 +1,227 @@
-import { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { softRed, neutrals } from '../styles/theme';
+import { useMemo, useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { softRed, neutrals } from "../styles/theme";
 import { motion } from "framer-motion";
-
 
 function Home() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate('/find-tasker', { state: { query: searchQuery } });
+    navigate("/find-tasker", { state: { query: searchQuery } });
   };
 
   const heroImageUrl =
-    'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1600&auto=format&fit=crop';
+    "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1800&auto=format&fit=crop";
 
-  // theme tokens imported from src/styles/theme.js
+  const topCategories = useMemo(
+    () => [
+      {
+        label: "Furniture Assembly",
+        image:
+          "https://images.unsplash.com/photo-1581539250439-c96689b516dd?q=80&w=1200&auto=format&fit=crop",
+      },
+      {
+        label: "TV Mounting",
+        image:
+          "https://images.unsplash.com/photo-1602293589930-45aad59ba3db?q=80&w=1200&auto=format&fit=crop",
+      },
+      {
+        label: "Cleaning",
+        image:
+          "https://images.unsplash.com/photo-1581579185169-812f6d2f8c8b?q=80&w=1200&auto=format&fit=crop",
+      },
+      {
+        label: "Help Moving",
+        image:
+          "https://images.unsplash.com/photo-1600518464441-9154a57e9a9b?q=80&w=1200&auto=format&fit=crop",
+      },
+      {
+        label: "Yardwork",
+        image:
+          "https://images.unsplash.com/photo-1599687266572-3c5bff5f6d41?q=80&w=1200&auto=format&fit=crop",
+      },
+      {
+        label: "Home Repairs",
+        image:
+          "https://images.unsplash.com/photo-1585128792020-803d29415281?q=80&w=1200&auto=format&fit=crop",
+      },
+    ],
+    []
+  );
 
-  const topCategories = [
-    { label: 'Furniture Assembly', emoji: '🪑' },
-    { label: 'TV Mounting', emoji: '📺' },
-    { label: 'Cleaning', emoji: '🧹' },
-    { label: 'Help Moving', emoji: '🚚' },
-    { label: 'Yardwork', emoji: '🌿' }, 
-    // i want to change these to different images rather
-  ];
+  const container = {
+    hidden: { opacity: 0, y: 14 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.55, ease: "easeOut", staggerChildren: 0.06 },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
+  };
 
   return (
     <motion.div
       className="space-y-16"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+      variants={container}
+      initial="hidden"
+      animate="show"
     >
-    {/* <div className="space-y-16"> */}
-      {/* --- Hero Section --- */}
-      <section className="rounded-3xl bg-gradient-to-b from-neutral-100 to-neutral-50 p-3 sm:p-4">
-        <div className="rounded-2xl bg-white shadow-[0_18px_45px_rgba(15,23,42,0.07)] border border-[#F5C8C8]/60 overflow-hidden transition-transform duration-300 hover:-translate-y-[2px]">
-          <div className="grid gap-8 md:grid-cols-2">
-            {/* Left: text */}
-            <div className="p-8 md:p-10 flex flex-col justify-center">
-              <h1 className="mt-1 text-3xl md:text-4xl lg:text-[2.6rem] font-semibold text-slate-900 tracking-tight leading-tight">
-                Your to-do list,
-                <span className={`font-semibold ${softRed.text}`}> done.</span>
-              </h1>
+      {/* HERO */}
+      <section className="relative overflow-hidden rounded-3xl border border-neutral-200 bg-[#FFF8F5] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+        {/* subtle moving background */}
+        <div className="absolute inset-0">
+          <motion.div
+            className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full blur-3xl opacity-25"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(249,115,91,0.95) 0%, rgba(249,115,91,0) 60%)",
+            }}
+            animate={{ x: [0, 18, -10, 0], y: [0, 12, -8, 0] }}
+            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute -bottom-48 -right-48 h-[640px] w-[640px] rounded-full blur-3xl opacity-25"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(253,232,228,1) 0%, rgba(253,232,228,0) 65%)",
+            }}
+            animate={{ x: [0, -14, 10, 0], y: [0, -10, 14, 0] }}
+            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/65 to-white" />
+        </div>
 
-              <p className="mt-4 text-sm md:text-base text-slate-600 leading-relaxed max-w-md">
-                Describe your task once and let CRETE match you with vetted, local
-                Taskers for assembly, mounting, moving, cleaning, and more.
-              </p>
+        <div className="relative grid gap-8 md:grid-cols-2">
+          {/* Left */}
+          <motion.div className="p-8 md:p-10" variants={item}>
+            <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1 text-xs text-slate-700 backdrop-blur-sm">
+              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              Quick matches
+              <span className="text-slate-400">•</span>
+              Easy scheduling
+            </div>
 
-              {user && user.role === 'client' ? (
-                <form
-                  onSubmit={handleSearch}
-                  className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center"
-                >
+            <h1 className="mt-4 text-3xl md:text-4xl lg:text-[2.65rem] font-semibold text-slate-900 tracking-tight leading-tight">
+              Need a hand?
+              <span className={`block ${softRed.text}`}>Book help in minutes.</span>
+            </h1>
+
+            <p className="mt-4 text-sm md:text-base text-slate-600 leading-relaxed max-w-md">
+              Post what you need, choose a category, and we’ll help you find someone local
+              who’s a good fit.
+            </p>
+
+            {/* Client search */}
+            {user && user.role === "client" ? (
+              <form
+                onSubmit={handleSearch}
+                className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center"
+              >
+                <div className="relative w-full">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="I need help fixing a leaky faucet..."
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#E65A5A]"
+                    placeholder='Try: "Mount a TV in Fullerton"'
+                    className="w-full rounded-xl border border-neutral-300 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/60"
                   />
-                  <button
-                    type="submit"
-                    className={`whitespace-nowrap rounded-md ${softRed.main} px-5 py-3 text-sm font-semibold text-white shadow-sm ${softRed.hover} transition-transform duration-150 hover:-translate-y-[1px]`}
-                  >
-                    Find Help
-                  </button>
-                </form>
-              ) : (
-                <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <Link
-                    to="/register"
-                    className={`inline-flex items-center justify-center rounded-full ${softRed.main} px-6 py-3 text-sm font-semibold text-white shadow-sm ${softRed.hover} transition-transform duration-150 hover:-translate-y-[1px]`}
-                  >
-                    Get Started
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="text-xs md:text-sm text-slate-600 hover:text-[#E65A5A]"
-                  >
-                    Want to earn money as a Tasker? Sign up here.
-                  </Link>
+                  <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">
+                    optional
+                  </div>
                 </div>
-              )}
 
-              {/* Tiny trust strip */}
-              <div className="mt-6 flex flex-wrap gap-4 text-xs text-slate-500">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-semibold text-white">
-                    4.9
-                  </span>
-                  <span>Average Tasker rating</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                  <span>Same-day help in most cities</span>
-                </div>
+                <button
+                  type="submit"
+                  className={`whitespace-nowrap rounded-xl ${softRed.main} px-5 py-3 text-sm font-semibold text-white shadow-sm ${softRed.hover} transition-transform duration-150 hover:-translate-y-[1px]`}
+                >
+                  Find a Tasker
+                </button>
+              </form>
+            ) : (
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/register"
+                  className={`inline-flex items-center justify-center rounded-xl ${softRed.main} px-6 py-3 text-sm font-semibold text-white shadow-sm ${softRed.hover} transition-transform duration-150 hover:-translate-y-[1px]`}
+                >
+                  Get Started
+                </Link>
+
+                <Link
+                  to="/register"
+                  className="text-xs md:text-sm text-slate-600 hover:text-[#E65A5A]"
+                >
+                  Want to earn as a Tasker? Sign up here.
+                </Link>
               </div>
+            )}
+
+            {/* Trust strip */}
+            <div className="mt-6 grid grid-cols-3 gap-3 max-w-lg">
+              {[
+                { k: "4.9", v: "avg rating" },
+                { k: "Same-day", v: "in many areas" },
+                { k: "Secure", v: "chat + payments" },
+              ].map((s) => (
+                <div
+                  key={s.k}
+                  className="rounded-2xl border border-neutral-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm"
+                >
+                  <div className="text-lg font-semibold text-slate-900">{s.k}</div>
+                  <div className="text-[11px] text-slate-500">{s.v}</div>
+                </div>
+              ))}
             </div>
+          </motion.div>
 
-            {/* Right: image */}
-            <div className="relative">
-              <img
-                src={heroImageUrl}
-                alt="Handyman at work"
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute bottom-4 left-4 rounded-lg bg-black/60 px-4 py-2 text-[11px] text-gray-100 shadow-sm">
-                <p className="font-medium">On site in as little as 2 hours</p>
-                <p className="text-[10px] text-gray-300">
-                  Assembly • Mounting • Moving • Cleaning
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+          {/* Right */}
+          <motion.div className="relative" variants={item}>
+            <motion.img
+              src={heroImageUrl}
+              alt="Handyman at work"
+              className="h-full w-full object-cover"
+              initial={{ scale: 1.03 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
+            />
 
-      {/* --- How it works --- */}
-      <section className="text-center">
-        <h2 className="text-2xl md:text-3xl font-semibold text-slate-900">
-          How it works
-        </h2>
-        <p className="mt-2 text-sm text-slate-500 max-w-xl mx-auto">
-          Simple steps to get your task completed.
-        </p>
-
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              n: 1,
-              title: 'Describe your task',
-              body:
-                'Tell us what you need done using smart search or by browsing categories.',
-            },
-            {
-              n: 2,
-              title: 'Choose your Tasker',
-              body:
-                'Compare profiles, reviews, and prices. Pick the best fit for your job.',
-            },
-            {
-              n: 3,
-              title: 'Get it done',
-              body:
-                'Chat, schedule, and pay securely once the work is complete.',
-            },
-          ].map((step) => (
-            <div
-              key={step.n}
-              className="flex flex-col items-center px-4 rounded-xl bg-white border border-neutral-200 shadow-sm py-6 transition-transform duration-150 hover:-translate-y-[2px] hover:shadow-md"
+            {/* Floating callouts */}
+            <motion.div
+              className="absolute left-4 top-4 rounded-2xl bg-white/85 backdrop-blur-sm border border-neutral-200 px-4 py-3 shadow-md"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.5 }}
             >
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${softRed.main} text-white text-sm font-semibold shadow-sm`}>
-                {step.n}
-              </div>
-              <h3 className="mt-4 text-base md:text-lg font-semibold text-slate-900">
-                {step.title}
-              </h3>
-              <p className="mt-2 text-sm text-slate-600">{step.body}</p>
-            </div>
-          ))}
+              <div className="text-xs text-slate-500">Nearby now</div>
+              <div className="text-sm font-semibold text-slate-900">Taskers available</div>
+              <div className="text-[11px] text-slate-600">Assembly • Cleaning • Mounting</div>
+            </motion.div>
+
+            <motion.div
+              className="absolute bottom-4 left-4 rounded-2xl bg-black/65 px-4 py-3 text-[11px] text-gray-100 shadow-md"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.55 }}
+            >
+              <p className="font-medium">Book today or schedule ahead</p>
+              <p className="text-[10px] text-gray-300">Fast, clear, and simple</p>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
-      {/* --- Top Categories Row --- */}
-      <section className="space-y-3">
+      {/* CATEGORIES (image tiles) */}
+      <motion.section variants={item} className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Top categories
+            Popular categories
           </h2>
           <Link
             to="/categories"
@@ -182,93 +231,171 @@ function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
-          {topCategories.map((cat) => (
-            <button
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {topCategories.map((cat, idx) => (
+            <motion.button
               key={cat.label}
-              onClick={() =>
-                navigate('/categories', { state: { focus: cat.label } })
-              }
-              className="group flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs sm:text-sm text-slate-700 shadow-sm hover:shadow-md hover:border-[#F5C8C8] transition-all duration-150"
+              onClick={() => navigate("/categories", { state: { focus: cat.label } })}
+              className="group relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-transform"
+              whileHover={{ y: -3 }}
+              whileTap={{ scale: 0.99 }}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.35 }}
+              transition={{ duration: 0.45, delay: idx * 0.03 }}
             >
-              <span className="text-base">{cat.emoji}</span>
-              <span className="group-hover:text-[#E65A5A]">{cat.label}</span>
-            </button>
+              <div className="absolute inset-0">
+                <img
+                  src={cat.image}
+                  alt={cat.label}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+              </div>
+
+              <div className="relative flex items-end justify-between p-4 min-h-[130px]">
+                <div>
+                  <div className="text-white font-semibold leading-snug">
+                    {cat.label}
+                  </div>
+                  <div className="mt-1 text-[11px] text-white/80">Browse</div>
+                </div>
+
+                <div className="rounded-full bg-white/20 border border-white/25 px-3 py-1 text-[11px] text-white backdrop-blur-sm">
+                  Quick
+                </div>
+              </div>
+            </motion.button>
           ))}
         </div>
-      </section>
+      </motion.section>
 
-      {/* --- Why choose CRETE? --- */}
-      <section className="space-y-6">
-        <h2 className="text-xl md:text-2xl font-semibold text-slate-900">
-          Why choose CRETE?
+      {/* HOW IT WORKS */}
+      <motion.section variants={item} className="text-center">
+        <h2 className="text-2xl md:text-3xl font-semibold text-slate-900">
+          How it works
         </h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-xl bg-white border border-neutral-200 shadow-sm p-4 text-left transition-transform duration-150 hover:-translate-y-[2px] hover:shadow-md">
-            <p className="text-sm font-semibold text-slate-900">Vetted Taskers</p>
-            <p className="mt-2 text-sm text-slate-600">
-              Profiles, reviews, and ratings help you book people who have proven
-              experience with the tasks you need.
-            </p>
-          </div>
-          <div className="rounded-xl bg-white border border-neutral-200 shadow-sm p-4 text-left transition-transform duration-150 hover:-translate-y-[2px] hover:shadow-md">
-            <p className="text-sm font-semibold text-slate-900">Transparent pricing</p>
-            <p className="mt-2 text-sm text-slate-600">
-              See hourly rates and estimates up front, with no surprise fees at the end
-              of the job.
-            </p>
-          </div>
-          <div className="rounded-xl bg-white border border-neutral-200 shadow-sm p-4 text-left transition-transform duration-150 hover:-translate-y-[2px] hover:shadow-md">
-            <p className="text-sm font-semibold text-slate-900">
-              Same-day availability
-            </p>
-            <p className="mt-2 text-sm text-slate-600">
-              Get help today for urgent tasks, or schedule for a time that fits your
-              calendar.
-            </p>
-          </div>
+        <p className="mt-2 text-sm text-slate-500 max-w-xl mx-auto">
+          Post a task, pick someone you like, and you’re set.
+        </p>
+
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { n: 1, title: "Post your task", body: "Describe what you need and choose a category." },
+            { n: 2, title: "Pick your Tasker", body: "Compare profiles and reviews, then message." },
+            { n: 3, title: "Get it done", body: "Schedule and pay securely when it’s complete." },
+          ].map((step, idx) => (
+            <motion.div
+              key={step.n}
+              className="flex flex-col items-center px-4 rounded-2xl bg-white border border-neutral-200 shadow-sm py-7 hover:shadow-md"
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.35 }}
+              transition={{ duration: 0.45, delay: idx * 0.06 }}
+              whileHover={{ y: -3 }}
+            >
+              <div className={`flex h-11 w-11 items-center justify-center rounded-full ${softRed.main} text-white text-sm font-semibold shadow-sm`}>
+                {step.n}
+              </div>
+              <h3 className="mt-4 text-base md:text-lg font-semibold text-slate-900">
+                {step.title}
+              </h3>
+              <p className="mt-2 text-sm text-slate-600 max-w-[28ch]">{step.body}</p>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </motion.section>
 
-      {/* --- Testimonials --- */}
-      <section className="space-y-6 mb-4">
-        <h2 className="text-xl md:text-2xl font-semibold text-slate-900 text-center">
-          What people are saying
+      {/* WHY */}
+      <motion.section variants={item} className="space-y-6">
+        <h2 className="text-xl md:text-2xl font-semibold text-slate-900">
+          Why people use CRETE
         </h2>
+
         <div className="grid gap-4 md:grid-cols-3">
           {[
             {
-              name: 'Maria G.',
-              role: 'Client • Furniture Assembly',
-              quote:
-                'My Tasker assembled three pieces of furniture in under an hour. I booked in the morning and it was done by lunch.',
+              title: "Real profiles + reviews",
+              body: "It’s easier to book when you can see what someone’s good at.",
             },
             {
-              name: 'James R.',
-              role: 'Tasker • Mounting & Repairs',
-              quote:
-                'CRETE makes it easy to find consistent work that fits around my schedule. The app handles all the details.',
+              title: "Clear categories",
+              body: "No guessing. Tasks and task types keep things organized.",
             },
             {
-              name: 'Elena V.',
-              role: 'Client • Moving Help',
-              quote:
-                'Booking moving help through CRETE saved me hours of stress. Communication and payment were super smooth.',
+              title: "Everything in one place",
+              body: "Chat, scheduling, and payments stay inside the app.",
             },
-          ].map((t) => (
-            <div
+          ].map((c, idx) => (
+            <motion.div
+              key={c.title}
+              className="rounded-2xl bg-white border border-neutral-200 shadow-sm p-5 text-left hover:shadow-md"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.35 }}
+              transition={{ duration: 0.45, delay: idx * 0.06 }}
+              whileHover={{ y: -3 }}
+            >
+              <p className="text-sm font-semibold text-slate-900">{c.title}</p>
+              <p className="mt-2 text-sm text-slate-600">{c.body}</p>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* TESTIMONIALS */}
+      <motion.section variants={item} className="space-y-6 mb-4">
+        <h2 className="text-xl md:text-2xl font-semibold text-slate-900 text-center">
+          What people say
+        </h2>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            {
+              name: "Maria G.",
+              role: "Client • Furniture Assembly",
+              quote: "Booked in the morning and it was done before lunch.",
+            },
+            {
+              name: "James R.",
+              role: "Tasker • Mounting",
+              quote: "I get jobs that actually match what I do, which is huge.",
+            },
+            {
+              name: "Elena V.",
+              role: "Client • Moving Help",
+              quote: "Communication was easy and payment was simple.",
+            },
+          ].map((t, idx) => (
+            <motion.div
               key={t.name}
-              className="rounded-xl bg-white border border-neutral-200 shadow-sm p-5 text-left flex flex-col justify-between transition-transform duration-150 hover:-translate-y-[2px] hover:shadow-md"
+              className="rounded-2xl bg-white border border-neutral-200 shadow-sm p-6 text-left flex flex-col justify-between hover:shadow-md"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.35 }}
+              transition={{ duration: 0.45, delay: idx * 0.06 }}
+              whileHover={{ y: -3 }}
             >
               <p className="text-sm text-slate-700">&ldquo;{t.quote}&rdquo;</p>
-              <div className="mt-4 text-xs text-slate-500">
+              <div className="mt-5 text-xs text-slate-500">
                 <p className="font-semibold text-slate-900">{t.name}</p>
                 <p>{t.role}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </section>
+
+        {!user && (
+          <div className="flex justify-center pt-2">
+            <Link
+              to="/register"
+              className={`inline-flex items-center justify-center rounded-xl ${softRed.main} px-6 py-3 text-sm font-semibold text-white shadow-sm ${softRed.hover} transition-transform duration-150 hover:-translate-y-[1px]`}
+            >
+              Make an account
+            </Link>
+          </div>
+        )}
+      </motion.section>
     </motion.div>
   );
 }
