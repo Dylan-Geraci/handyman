@@ -21,3 +21,9 @@ portfolio_collection = db.portfolio_items
 contact_requests_collection = db.contact_requests
 categories_collection = db.categories
 task_types_collection = db.task_types
+scrape_logs_collection = db.scrape_logs
+
+# --- Indexes for scraped tasks ---
+tasks_collection.create_index("dedup_key", unique=True, sparse=True)
+tasks_collection.create_index("source")
+tasks_collection.create_index("is_auto_generated")

@@ -1,5 +1,38 @@
 # Development Changes Log
 
+## 2026-03-03 - Web Scraper & crawl4ai Installation Fix
+
+### Problem
+`pip install crawl4ai` fails on Windows because its transitive dependency `litellm` contains benchmark result files with paths exceeding Windows' 260-character MAX_PATH limit.
+
+### Solution
+Installed `crawl4ai` with `--no-deps` flag, then manually installed only the dependencies needed for web crawling (not LLM providers). The scraper code already has lazy imports with `try/except ImportError` and comprehensive fallback data for all 32 services, so the app runs fine even without crawl4ai.
+
+### Installation Steps
+```bash
+pip install --no-deps crawl4ai
+pip install -r backend/requirements.txt
+playwright install chromium
+```
+
+### Modified Files
+- `backend/requirements.txt` - Replaced `crawl4ai` with individual core dependencies (playwright, beautifulsoup4, lxml, httpx, aiofiles, aiosqlite, pyOpenSSL, rich, psutil, fake-useragent, xxhash, nltk, chardet, cssselect, brotli, tf-playwright-stealth, rank-bm25, snowballstemmer, humanize, lark, tiktoken, patchright, alphashape, shapely)
+
+### New Files (from previous session)
+- `backend/scrapers/__init__.py` - Scrapers package init
+- `backend/scrapers/base_scraper.py` - Base scraper class and ScrapedService model
+- `backend/scrapers/taskrabbit_scraper.py` - TaskRabbit scraper with fallback data for 32 services
+- `backend/routers/scraper.py` - Scraper API endpoints
+
+### API Endpoints
+- **POST** `/api/scraper/run` - Run scraper (`{"source": "taskrabbit", "locations": ["New York, NY"]}`)
+
+### Notes
+- `litellm` is intentionally excluded — only needed for LLM-based extraction, not basic web crawling
+- Alternative fix: Enable Windows Long Paths via registry (`HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled` = 1), requires admin + reboot
+
+---
+
 ## 2026-02-08 - AI Recommendation System (Phase 1)
 
 ### Database Migration

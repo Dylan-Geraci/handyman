@@ -172,3 +172,30 @@ class RecommendationResponse(BaseModel):
     recommendations: List[dict]
     total_available: int
     showing_top: int
+
+
+# --- Scraper Models ---
+class ScrapeRequest(BaseModel):
+    """Request model for triggering a scrape run."""
+    source: str = "taskrabbit"
+    locations: List[str] = ["New York, NY"]
+
+
+class ScrapeResponse(BaseModel):
+    """Response model for scrape run results."""
+    source: str
+    scraped: int
+    inserted: int
+    updated: int
+    errors: int
+
+
+class ScrapeLog(BaseModel):
+    """Log entry for a scrape run."""
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    source: str
+    locations: List[str]
+    scraped: int
+    inserted: int
+    updated: int
+    errors: int

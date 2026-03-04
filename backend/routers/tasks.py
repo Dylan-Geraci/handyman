@@ -321,6 +321,8 @@ async def create_task(
     task_data["estimated_difficulty"] = estimate_task_difficulty(task_data)
     task_data["coordinates"] = geocode_location(task_data.get("location", ""))
     task_data["budget_range"] = None  # Can be added later if needed
+    task_data["source"] = "manual"
+    task_data["is_auto_generated"] = False
 
     tasks_collection.insert_one(task_data)
     return populate_task_details(task_data)
@@ -332,9 +334,10 @@ async def get_open_tasks(
     location: Optional[str] = None,
     q: Optional[str] = None,
     category_id: Optional[str] = None,
-    task_type_id: Optional[str] = None
+    task_type_id: Optional[str] = None,
+    source: Optional[str] = None
 ):
-    """Get open tasks (taskers only). Supports location, keyword, category, and task type filters."""
+    """Get open tasks (taskers only). Supports location, keyword, category, task type, and source filters."""
     if current_user["role"] != "tasker":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -353,6 +356,8 @@ async def get_open_tasks(
         query["category_id"] = category_id
     if task_type_id:
         query["task_type_id"] = task_type_id
+    if source:
+        query["source"] = source
 
     tasks_cursor = tasks_collection.find(query)
     return [populate_task_details(task) for task in tasks_cursor]

@@ -9,7 +9,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
-from routers import auth, tasks, messaging, admin, categories
+from routers import auth, tasks, messaging, admin, categories, scraper
 
 # Import WebSocket handler
 from routers.messaging import websocket_chat
@@ -40,6 +40,7 @@ app.include_router(tasks.router)          # /api/tasks, /api/taskers/ai-search, 
 app.include_router(messaging.router)      # /api/messages, /api/notifications
 app.include_router(admin.router)          # /api/services, /api/portfolio, /api/reviews, etc.
 app.include_router(categories.router)     # /api/categories, /api/task-types
+app.include_router(scraper.router)       # /api/scraper/run, /api/scraper/status, /api/scraper/tasks
 
 
 # --- Root Endpoint ---

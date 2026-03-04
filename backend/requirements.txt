@@ -1,0 +1,41 @@
+fastapi
+uvicorn
+pymongo
+python-jose[cryptography]
+bcrypt
+passlib[bcrypt]
+python-dotenv
+python-multipart
+pydantic[email]
+google-generativeai
+websockets
+# crawl4ai must be installed with --no-deps to avoid litellm Windows MAX_PATH issue:
+#   pip install --no-deps crawl4ai
+# Then install the rest of this file normally:
+#   pip install -r requirements.txt
+# Then setup playwright browser:
+#   playwright install chromium
+beautifulsoup4
+lxml
+httpx
+aiofiles
+aiosqlite
+playwright
+pyOpenSSL
+rich
+psutil
+fake-useragent
+xxhash
+nltk
+chardet
+cssselect
+brotli
+tf-playwright-stealth
+rank-bm25
+snowballstemmer
+humanize
+lark
+tiktoken
+patchright
+alphashape
+shapely
