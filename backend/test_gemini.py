@@ -25,8 +25,9 @@ def test_gemini_api():
         print("[OK] Gemini API configured")
 
         # Create model
-        model = genai.GenerativeModel('gemini-2.5-pro')
-        print("[OK] Gemini model created (gemini-2.5-pro)")
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        model = genai.GenerativeModel(model_name)
+        print(f"[OK] Gemini model created ({model_name})")
 
         # Test with simple prompt
         print("\n[TESTING] Testing API with simple prompt...")

@@ -28,7 +28,7 @@ try:
     if not gemini_api_key:
         raise ValueError("GOOGLE_API_KEY not found in .env file. Please add it.")
     genai.configure(api_key=gemini_api_key)
-    gemini_model = genai.GenerativeModel('gemini-2.5-pro')
+    gemini_model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
 except Exception as e:
     print(f"CRITICAL ERROR: Could not configure Gemini API. Please check your GOOGLE_API_KEY. Error: {e}")
     gemini_model = None
