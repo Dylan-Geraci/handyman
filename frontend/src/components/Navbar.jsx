@@ -39,9 +39,7 @@ function Navbar() {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await axios.put(
-        `http://localhost:8000/api/notifications/${notificationId}/read`
-      );
+      await axios.put(`http://localhost:8000/api/notifications/${notificationId}/read`);
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
@@ -52,130 +50,107 @@ function Navbar() {
 
   if (isHomePage) {
     return (
-      <nav className="bg-[#f6f4f2]">
-        <div className="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            {/* Logo */}
-            <div className="flex items-center justify-between">
-              <Link
-                to="/"
-                className="text-[1.7rem] font-semibold tracking-[0.06em] text-[#7b2e2f]"
-              >
-                CRETEBOT
-              </Link>
-            </div>
+      <nav className="w-full border-b border-[#e7dfd7] bg-[#f8f5f2]">
+        <div className="relative flex w-full items-center justify-between px-8 py-5 lg:px-12">
+          {/* Left: Logo */}
+          <Link
+            to="/"
+            className="z-10 shrink-0 text-[2rem] font-semibold tracking-[0.08em] text-[#7b2e2f] whitespace-nowrap"
+          >
+            CRETEBOT
+          </Link>
 
-            {/* Center links */}
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-700">
-              <Link to="/about" className="hover:text-[#7b2e2f] transition-colors">
-                About Us
-              </Link>
-              <Link
-                to="/services"
-                className="hover:text-[#7b2e2f] transition-colors"
-              >
-                Services
-              </Link>
-              <Link
-                to="/categories"
-                className="hover:text-[#7b2e2f] transition-colors"
-              >
-                Categories
-              </Link>
-            </div>
+          {/* Center: Main nav */}
+          <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-10 md:flex">
+            <Link to="/about" className="text-[15px] text-slate-700 transition hover:text-[#7b2e2f] whitespace-nowrap">
+              About Us
+            </Link>
+            <Link to="/services" className="text-[15px] text-slate-700 transition hover:text-[#7b2e2f] whitespace-nowrap">
+              Services
+            </Link>
+            <Link to="/categories" className="text-[15px] text-slate-700 transition hover:text-[#7b2e2f] whitespace-nowrap">
+              Categories
+            </Link>
+          </div>
 
-            {/* Right side */}
-            <div className="flex flex-wrap items-center gap-4 text-sm md:justify-end">
-              {token ? (
-                <>
-                  <div className="relative">
-                    <button
-                      onClick={() => setIsPanelOpen(!isPanelOpen)}
-                      className="relative rounded-full p-2 text-slate-700 transition hover:bg-[#ece6df]"
-                    >
-                      <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                        />
-                      </svg>
-                      {unreadCount > 0 && (
-                        <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-[#7b2e2f] text-[10px] font-semibold text-white">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </button>
-                    {isPanelOpen && (
-                      <NotificationsPanel
-                        notifications={notifications}
-                        onMarkAsRead={handleMarkAsRead}
-                      />
-                    )}
-                  </div>
-
-                  {user?.role === "client" && (
-                    <Link
-                      to="/client/tasks"
-                      className="hover:text-[#7b2e2f] transition-colors"
-                    >
-                      My Tasks
-                    </Link>
-                  )}
-
-                  {user?.role === "tasker" && (
-                    <>
-                      <Link
-                        to="/tasker/dashboard"
-                        className="hover:text-[#7b2e2f] transition-colors"
-                      >
-                        Dashboard
-                      </Link>
-                      <Link
-                        to="/tasker/recommendations"
-                        className="hover:text-[#7b2e2f] transition-colors"
-                      >
-                        Recommended Tasks
-                      </Link>
-                    </>
-                  )}
-
-                  {user?.role === "admin" && (
-                    <Link
-                      to="/admin/dashboard"
-                      className="hover:text-[#7b2e2f] transition-colors"
-                    >
-                      Admin Panel
-                    </Link>
-                  )}
-
+          {/* Right: Auth */}
+          <div className="z-10 flex items-center gap-4 lg:gap-5">
+            {token ? (
+              <>
+                <div className="relative">
                   <button
-                    onClick={handleLogout}
-                    className="rounded-full border border-[#7b2e2f] px-4 py-2 text-sm font-medium text-[#7b2e2f] transition hover:bg-[#7b2e2f] hover:text-white"
+                    onClick={() => setIsPanelOpen(!isPanelOpen)}
+                    className="relative rounded-full p-2 text-slate-700 transition hover:bg-[#ece6df]"
                   >
-                    Logout
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-[#7b2e2f] text-[10px] font-semibold text-white">
+                        {unreadCount}
+                      </span>
+                    )}
                   </button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="hover:text-[#7b2e2f] transition-colors">
-                    Login / Sign Up
-                  </Link>
+
+                  {isPanelOpen && (
+                    <NotificationsPanel
+                      notifications={notifications}
+                      onMarkAsRead={handleMarkAsRead}
+                    />
+                  )}
+                </div>
+
+                {user?.role === "client" && (
                   <Link
-                    to="/register"
-                    className="rounded-full bg-[#7b2e2f] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#652425]"
+                    to="/client/tasks"
+                    className="hidden text-sm text-slate-700 transition hover:text-[#7b2e2f] sm:block whitespace-nowrap"
                   >
-                    Become a Tasker
+                    My Tasks
                   </Link>
-                </>
-              )}
-            </div>
+                )}
+
+                {user?.role === "tasker" && (
+                  <Link
+                    to="/tasker/dashboard"
+                    className="hidden text-sm text-slate-700 transition hover:text-[#7b2e2f] sm:block whitespace-nowrap"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+
+                <button
+                  onClick={handleLogout}
+                  className="rounded-full border border-[#7b2e2f] px-5 py-2.5 text-sm font-medium text-[#7b2e2f] transition hover:bg-[#7b2e2f] hover:text-white whitespace-nowrap"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-sm text-slate-700 transition hover:text-[#7b2e2f] whitespace-nowrap"
+                >
+                  Login / Sign Up
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-full bg-[#8f3737] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#742c2c] whitespace-nowrap"
+                >
+                  Become a Tasker
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -183,55 +158,49 @@ function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-30 bg-[#f6f4f2] border-b border-[#e9e2da]">
-      <div className="mx-auto flex max-w-[1180px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <nav className="sticky top-0 z-30 w-full border-b border-[#e7dfd7] bg-[#f8f5f2]">
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-6 py-4 lg:px-10">
         <Link
           to="/"
-          className="text-[1.5rem] font-semibold tracking-[0.06em] text-[#7b2e2f]"
+          className="text-[1.65rem] font-semibold tracking-[0.08em] text-[#7b2e2f]"
         >
           CRETEBOT
         </Link>
 
-        <div className="flex items-center gap-4 text-sm text-slate-700">
-          <Link to="/categories" className="hover:text-[#7b2e2f] transition-colors">
+        <div className="flex items-center gap-6 text-sm text-slate-700">
+          <Link to="/categories" className="transition hover:text-[#7b2e2f]">
             Categories
           </Link>
 
           {token ? (
             <>
               {user?.role === "client" && (
-                <Link
-                  to="/find-tasker"
-                  className="hover:text-[#7b2e2f] transition-colors"
-                >
+                <Link to="/find-tasker" className="transition hover:text-[#7b2e2f]">
                   Find a Tasker
                 </Link>
               )}
 
               {user?.role === "tasker" && (
-                <Link
-                  to="/tasker/dashboard"
-                  className="hover:text-[#7b2e2f] transition-colors"
-                >
+                <Link to="/tasker/dashboard" className="transition hover:text-[#7b2e2f]">
                   Dashboard
                 </Link>
               )}
 
               <button
                 onClick={handleLogout}
-                className="rounded-full bg-[#7b2e2f] px-4 py-2 text-white transition hover:bg-[#652425]"
+                className="rounded-full bg-[#8f3737] px-4 py-2 text-white transition hover:bg-[#742c2c]"
               >
                 Logout
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="hover:text-[#7b2e2f] transition-colors">
+              <Link to="/login" className="transition hover:text-[#7b2e2f]">
                 Login
               </Link>
               <Link
                 to="/register"
-                className="rounded-full bg-[#7b2e2f] px-4 py-2 text-white transition hover:bg-[#652425]"
+                className="rounded-full bg-[#8f3737] px-4 py-2 text-white transition hover:bg-[#742c2c]"
               >
                 Sign Up
               </Link>

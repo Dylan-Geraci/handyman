@@ -2,39 +2,30 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="mt-12 border-t border-[#e7dfd7] bg-[#f6f4f2]">
-      <div className="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 py-6 text-[11px] text-slate-500">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-slate-700">CRETE Solutions</p>
-            <p className="mt-1 max-w-md">
-              A simpler way to connect people with reliable home help.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-4 text-[11px]">
-            <Link to="/about" className="hover:text-[#7b2e2f] transition-colors">
-              About
-            </Link>
-            <Link
-              to="/categories"
-              className="hover:text-[#7b2e2f] transition-colors"
-            >
-              Categories
-            </Link>
-            <Link to="/contact" className="hover:text-[#7b2e2f] transition-colors">
-              Help
-            </Link>
-            <Link
-              to="/register"
-              className="hover:text-[#7b2e2f] transition-colors"
-            >
-              Become a Tasker
-            </Link>
-          </div>
+    <footer className="w-full border-t border-[#e7dfd7] bg-[#f5f3f1]">
+      <div className="flex w-full items-end justify-between px-8 py-8 text-sm text-slate-500 lg:px-12">
+        <div className="shrink-0">
+          <p className="text-base font-semibold text-slate-800">CRETE Solutions</p>
+          <p className="mt-2 max-w-md leading-6">
+            A simpler way to connect people with reliable home help.
+          </p>
+          <p className="mt-4 text-xs">© {new Date().getFullYear()} CRETE Solutions</p>
         </div>
 
-        <p className="mt-4">© {new Date().getFullYear()} CRETE Solutions</p>
+        <div className="flex flex-wrap items-center justify-end gap-5 text-sm">
+          <Link to="/about" className="transition hover:text-[#7b2e2f] whitespace-nowrap">
+            About
+          </Link>
+          <Link to="/categories" className="transition hover:text-[#7b2e2f] whitespace-nowrap">
+            Categories
+          </Link>
+          <Link to="/contact" className="transition hover:text-[#7b2e2f] whitespace-nowrap">
+            Help
+          </Link>
+          <Link to="/register" className="transition hover:text-[#7b2e2f] whitespace-nowrap">
+            Become a Tasker
+          </Link>
+        </div>
       </div>
     </footer>
   );
