@@ -2,36 +2,31 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="mt-10 border-t border-neutral-200 pt-6 pb-8 text-xs text-slate-500">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <p className="font-semibold text-slate-800 text-sm">
-            CRETE Handyman
+    <footer className="w-full border-t border-[#e7dfd7] bg-[#f5f3f1]">
+      <div className="flex w-full items-end justify-between px-8 py-8 text-sm text-slate-500 lg:px-12">
+        <div className="shrink-0">
+          <p className="text-base font-semibold text-slate-800">CRETE Solutions</p>
+          <p className="mt-2 max-w-md leading-6">
+            A simpler way to connect people with reliable home help.
           </p>
-          <p className="mt-1">
-            A smarter way to match clients with trusted Taskers.
-          </p>
+          <p className="mt-4 text-xs">© {new Date().getFullYear()} CRETE Solutions</p>
         </div>
 
-        <div className="flex flex-wrap gap-4">
-          <Link to="/about" className="hover:text-[#E65A5A]">
+        <div className="flex flex-wrap items-center justify-end gap-5 text-sm">
+          <Link to="/about" className="transition hover:text-[#7b2e2f] whitespace-nowrap">
             About
           </Link>
-          <Link to="/register" className="hover:text-[#E65A5A]">
-            Become a Tasker
-          </Link>
-          <Link to="/categories" className="hover:text-[#E65A5A]">
+          <Link to="/categories" className="transition hover:text-[#7b2e2f] whitespace-nowrap">
             Categories
           </Link>
-          <Link to="/contact" className="hover:text-[#E65A5A]">
-            Help &amp; Support
+          <Link to="/contact" className="transition hover:text-[#7b2e2f] whitespace-nowrap">
+            Help
+          </Link>
+          <Link to="/register" className="transition hover:text-[#7b2e2f] whitespace-nowrap">
+            Become a Tasker
           </Link>
         </div>
       </div>
-
-      <p className="mt-4 text-[11px]">
-        © {new Date().getFullYear()} CRETE. All rights reserved.
-      </p>
     </footer>
   );
 }

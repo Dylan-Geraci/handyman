@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
 import Services from './components/Services';
@@ -21,21 +21,26 @@ import ResetPassword from './components/ResetPassword';
 import Categories from './pages/Categories';
 import Footer from './components/Footer';
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
   return (
-    // Global shell: soft neutral background, dark text
-    <div className="min-h-screen bg-neutral-50 text-slate-900">
-      <div className="max-w-6xl mx-auto px-4 pb-10">
-        {/* Brand header */}
-        <h1 className="text-2xl font-semibold text-center py-4 tracking-tight">
-          <span className="text-red-600">CRETE</span>{' '}
-          <span className="text-slate-900">Handyman</span>
-        </h1>
+    <div className="min-h-screen w-full bg-[#f5f3f1] text-slate-900">
+      {!isHomePage && (
+        <header className="w-full border-b border-[#e7dfd7] bg-[#f5f3f1]">
+          <div className="mx-auto max-w-[1400px] px-5 py-4 text-center sm:px-8 lg:px-10">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              <span className="text-red-600">CRETE</span>{' '}
+              <span className="text-slate-900">Handyman</span>
+            </h1>
+          </div>
+        </header>
+      )}
 
-        <Navbar />
+      <Navbar />
 
-        <hr className="my-4 border-neutral-200" />
-
+      <main className="w-full">
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -46,8 +51,6 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/taskers/:username" element={<TaskerProfile />} />
           <Route path="/categories" element={<Categories />} />
-
-          {/* ADDED: Routes for the password reset flow */}
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
@@ -117,10 +120,15 @@ function App() {
             }
           />
         </Routes>
-        <Footer />
-      </div>
+      </main>
+
+      <Footer />
     </div>
   );
+}
+
+function App() {
+  return <AppContent />;
 }
 
 export default App;

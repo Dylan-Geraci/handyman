@@ -1,24 +1,26 @@
-import { useState, useEffect, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { AuthContext } from '../context/AuthContext';
-import NotificationsPanel from './NotificationsPanel';
-import { softRed, neutrals } from '../styles/theme';
+import { useState, useEffect, useContext } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
+import NotificationsPanel from "./NotificationsPanel";
 
 function Navbar() {
   const { token, user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [notifications, setNotifications] = useState([]);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
+  const isHomePage = location.pathname === "/";
+
   const fetchNotifications = async () => {
     if (!token) return;
     try {
-      const response = await axios.get('http://localhost:8000/api/notifications');
+      const response = await axios.get("http://localhost:8000/api/notifications");
       setNotifications(response.data);
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      console.error("Failed to fetch notifications:", error);
     }
   };
 
@@ -32,7 +34,7 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const handleMarkAsRead = async (notificationId) => {
@@ -40,127 +42,165 @@ function Navbar() {
       await axios.put(`http://localhost:8000/api/notifications/${notificationId}/read`);
       fetchNotifications();
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      console.error("Failed to mark notification as read:", error);
     }
   };
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
-  const linkBase = `text-sm font-medium ${neutrals.mainText} hover:text-[#E65A5A] transition-colors`;
 
-  return (
-    <nav className="sticky top-0 z-30 mb-3">
-      <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white/80 px-4 py-3 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-sm">
-        {/* --- Left Side Links --- */}
-        <div className="flex items-center space-x-4">
-          <Link to="/" className={linkBase}>
-            Home
+  if (isHomePage) {
+    return (
+      <nav className="w-full border-b border-[#e7dfd7] bg-[#f8f5f2]">
+        <div className="relative flex w-full items-center justify-between px-8 py-5 lg:px-12">
+          {/* Left: Logo */}
+          <Link
+            to="/"
+            className="z-10 shrink-0 text-[2rem] font-semibold tracking-[0.08em] text-[#7b2e2f] whitespace-nowrap"
+          >
+            CRETEBOT
           </Link>
 
-          {/* Public links only if logged out */}
-          {!token && (
-            <>
-              <Link to="/services" className={linkBase}>
-                Services
-              </Link>
-              <Link to="/portfolio" className={linkBase}>
-                Portfolio
-              </Link>
-              <Link to="/contact" className={linkBase}>
-                Contact
-              </Link>
-            </>
-          )}
+          {/* Center: Main nav */}
+          <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-10 md:flex">
+            <Link to="/about" className="text-[15px] text-slate-700 transition hover:text-[#7b2e2f] whitespace-nowrap">
+              About Us
+            </Link>
+            <Link to="/services" className="text-[15px] text-slate-700 transition hover:text-[#7b2e2f] whitespace-nowrap">
+              Services
+            </Link>
+            <Link to="/categories" className="text-[15px] text-slate-700 transition hover:text-[#7b2e2f] whitespace-nowrap">
+              Categories
+            </Link>
+          </div>
 
-          {/* Categories visible to everyone */}
-          <Link to="/categories" className={linkBase}>
+          {/* Right: Auth */}
+          <div className="z-10 flex items-center gap-4 lg:gap-5">
+            {token ? (
+              <>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsPanelOpen(!isPanelOpen)}
+                    className="relative rounded-full p-2 text-slate-700 transition hover:bg-[#ece6df]"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-[#7b2e2f] text-[10px] font-semibold text-white">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {isPanelOpen && (
+                    <NotificationsPanel
+                      notifications={notifications}
+                      onMarkAsRead={handleMarkAsRead}
+                    />
+                  )}
+                </div>
+
+                {user?.role === "client" && (
+                  <Link
+                    to="/client/tasks"
+                    className="hidden text-sm text-slate-700 transition hover:text-[#7b2e2f] sm:block whitespace-nowrap"
+                  >
+                    My Tasks
+                  </Link>
+                )}
+
+                {user?.role === "tasker" && (
+                  <Link
+                    to="/tasker/dashboard"
+                    className="hidden text-sm text-slate-700 transition hover:text-[#7b2e2f] sm:block whitespace-nowrap"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+
+                <button
+                  onClick={handleLogout}
+                  className="rounded-full border border-[#7b2e2f] px-5 py-2.5 text-sm font-medium text-[#7b2e2f] transition hover:bg-[#7b2e2f] hover:text-white whitespace-nowrap"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-sm text-slate-700 transition hover:text-[#7b2e2f] whitespace-nowrap"
+                >
+                  Login / Sign Up
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-full bg-[#8f3737] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#742c2c] whitespace-nowrap"
+                >
+                  Become a Tasker
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  return (
+    <nav className="sticky top-0 z-30 w-full border-b border-[#e7dfd7] bg-[#f8f5f2]">
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-6 py-4 lg:px-10">
+        <Link
+          to="/"
+          className="text-[1.65rem] font-semibold tracking-[0.08em] text-[#7b2e2f]"
+        >
+          CRETEBOT
+        </Link>
+
+        <div className="flex items-center gap-6 text-sm text-slate-700">
+          <Link to="/categories" className="transition hover:text-[#7b2e2f]">
             Categories
           </Link>
 
-          {/* Logged-in client link */}
-          {user && user.role === 'client' && (
-            <Link
-              to="/find-tasker"
-              className={`inline-flex items-center justify-center rounded-full ${softRed.main} text-white font-semibold py-1.5 px-3 text-xs sm:text-sm ${softRed.hover} transition-transform duration-150 hover:-translate-y-[1px] shadow-sm`}
-            >
-              Find a Tasker
-            </Link>
-          )}
-
-          {/* NEW: Tasker recommendations link */}
-          {user && user.role === 'tasker' && (
-            <Link to="/tasker/recommendations" className={linkBase}>
-              Recommended Tasks
-            </Link>
-          )}
-        </div>
-
-        {/* --- Right Side Links (Dynamic Part) --- */}
-        <div className="flex items-center space-x-4 text-sm">
           {token ? (
             <>
-              {/* Notification bell */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsPanelOpen(!isPanelOpen)}
-                  className="relative p-2 rounded-full hover:bg-neutral-100 text-slate-700 transition-colors"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                    ></path>
-                  </svg>
-                  {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 block h-4 w-4 rounded-full bg-[#E65A5A] text-white text-[10px] font-semibold flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-                {isPanelOpen && (
-                  <NotificationsPanel notifications={notifications} onMarkAsRead={handleMarkAsRead} />
-                )}
-              </div>
+              {user?.role === "client" && (
+                <Link to="/find-tasker" className="transition hover:text-[#7b2e2f]">
+                  Find a Tasker
+                </Link>
+              )}
 
-              {/* Role-based dashboard links */}
-              {user?.role === 'client' && (
-                <Link to="/client/tasks" className={linkBase}>
-                  My Tasks
-                </Link>
-              )}
-              {user?.role === 'tasker' && (
-                <Link to="/tasker/dashboard" className={linkBase}>
+              {user?.role === "tasker" && (
+                <Link to="/tasker/dashboard" className="transition hover:text-[#7b2e2f]">
                   Dashboard
-                </Link>
-              )}
-              {user?.role === 'admin' && (
-                <Link to="/admin/dashboard" className={linkBase}>
-                  Admin Panel
                 </Link>
               )}
 
               <button
                 onClick={handleLogout}
-                className="bg-slate-900 hover:bg-black text-white font-semibold py-1.5 px-3 rounded-full text-xs sm:text-sm transition-colors"
+                className="rounded-full bg-[#8f3737] px-4 py-2 text-white transition hover:bg-[#742c2c]"
               >
                 Logout
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className={linkBase}>
+              <Link to="/login" className="transition hover:text-[#7b2e2f]">
                 Login
               </Link>
               <Link
                 to="/register"
-                className={`inline-flex items-center justify-center rounded-full ${softRed.main} text-white font-semibold py-1.5 px-4 text-xs sm:text-sm ${softRed.hover} transition-transform duration-150 hover:-translate-y-[1px] shadow-sm`}
+                className="rounded-full bg-[#8f3737] px-4 py-2 text-white transition hover:bg-[#742c2c]"
               >
                 Sign Up
               </Link>
