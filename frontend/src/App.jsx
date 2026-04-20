@@ -20,6 +20,7 @@ import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import Categories from './pages/Categories';
 import Footer from './components/Footer';
+import About from "./components/About";
 
 // Pages that render their own full-bleed layout (no padding wrapper needed)
 const FULL_BLEED_ROUTES = ['/'];
@@ -43,6 +44,7 @@ function AppContent() {
           <div className="mx-auto w-full max-w-[1400px] px-8 py-10 lg:px-12">
             <Routes>
               <Route path="/services" element={<Services />} />
+              <Route path="/about" element={<About />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
