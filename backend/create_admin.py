@@ -36,7 +36,8 @@ def create_admin_user():
     # Insert the new user into the database
     users_collection.insert_one({
         "username": username,
-        "hashed_password": hashed_password
+        "hashed_password": hashed_password,
+        "role": "admin"
     })
     
     print(f"Admin user '{username}' created successfully!")
