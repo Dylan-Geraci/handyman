@@ -23,6 +23,7 @@ def create_admin_user():
     
     # Get username and password from the terminal
     username = input("Enter admin username: ")
+    full_name = input("Enter admin full name: ")
     password = input("Enter admin password: ")
     
     # Hash the password
@@ -36,10 +37,10 @@ def create_admin_user():
     # Insert the new user into the database
     users_collection.insert_one({
         "username": username,
+        "full_name": full_name,
         "hashed_password": hashed_password,
         "role": "admin"
     })
-    
     print(f"Admin user '{username}' created successfully!")
 
 # This makes the script runnable from the command line

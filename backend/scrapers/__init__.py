@@ -22,6 +22,8 @@ async def run_scraper(source: str = "taskrabbit", locations: list = None):
     if locations is None:
         locations = ["New York, NY"]
 
+    source = source.strip().lower()
+
     if source == "taskrabbit":
         scraper = TaskRabbitScraper()
     else:

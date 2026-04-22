@@ -5,6 +5,7 @@ Uses a static mapping table for known slugs, then falls back to keyword
 matching against our task_types collection's keywords arrays.
 """
 
+import re
 from typing import Dict, Optional, Tuple
 from database import categories_collection, task_types_collection
 
@@ -107,6 +108,8 @@ class CategoryMapper:
         self._categories = list(categories_collection.find({}))
         self._task_types = list(task_types_collection.find({}))
 
+        print(f"Loaded {len(self._categories)} categories and {len(self._task_types)} task types from DB")
+
         # Build lookup maps
         for cat in self._categories:
             self._category_name_to_id[cat["name"]] = str(cat["_id"])
@@ -119,6 +122,10 @@ class CategoryMapper:
                     key = (cat["name"], tt["name"])
                     self._task_type_lookup[key] = tt
                     break
+
+    def _normalize_slug(self, value: str) -> str:
+        """Normalize a slug/title to lowercase hyphenated form."""
+        return re.sub(r"[^a-z0-9]+", "-", (value or "").lower()).strip("-")
 
     def map(self, source_slug: str, title: str = "", description: str = "") -> Optional[Dict]:
         """
@@ -135,23 +142,38 @@ class CategoryMapper:
         """
         self._load_from_db()
 
+        normalized_slug = self._normalize_slug(source_slug)
+        normalized_title_slug = self._normalize_slug(title)
+
+        print(f"Mapping source_slug='{source_slug}' normalized='{normalized_slug}' title='{title}' title_slug='{normalized_title_slug}'")
+
         # 1. Try static slug mapping
-        if source_slug in TASKRABBIT_SLUG_MAP:
-            cat_name, tt_name = TASKRABBIT_SLUG_MAP[source_slug]
+        if normalized_slug in TASKRABBIT_SLUG_MAP:
+            cat_name, tt_name = TASKRABBIT_SLUG_MAP[normalized_slug]
+            print(f"Matched static slug map with source slug: {normalized_slug} -> {cat_name} / {tt_name}")
+            return self._resolve_names(cat_name, tt_name)
+
+        # 1b. Try normalized title as slug
+        if normalized_title_slug in TASKRABBIT_SLUG_MAP:
+            cat_name, tt_name = TASKRABBIT_SLUG_MAP[normalized_title_slug]
+            print(f"Matched static slug map with title slug: {normalized_title_slug} -> {cat_name} / {tt_name}")
             return self._resolve_names(cat_name, tt_name)
 
         # 2. Fallback: keyword matching against task_types keywords
         result = self._keyword_match(title, description)
         if result:
+            print(f"Matched keyword fallback -> {result}")
             return result
 
         # 3. Last resort: General Help -> Other
+        print("Falling back to General Help -> Other")
         return self._resolve_names("General Help", "Other")
 
     def _resolve_names(self, category_name: str, task_type_name: str) -> Optional[Dict]:
         """Resolve category/task_type names to their IDs."""
         cat_id = self._category_name_to_id.get(category_name)
         if not cat_id:
+            print(f"Category not found in DB: {category_name}")
             return None
 
         tt_doc = self._task_type_lookup.get((category_name, task_type_name))
@@ -164,6 +186,7 @@ class CategoryMapper:
                     break
 
         if not tt_doc:
+            print(f"Task type not found in DB: {category_name} / {task_type_name}")
             return None
 
         return {
@@ -175,20 +198,25 @@ class CategoryMapper:
 
     def _keyword_match(self, title: str, description: str) -> Optional[Dict]:
         """Fall back to keyword matching against task_types keywords."""
-        text_tokens = set(f"{title} {description}".lower().split())
+        normalized_text = re.sub(r"[^a-z0-9\s]+", " ", f"{title} {description}".lower())
+        text_tokens = set(normalized_text.split())
 
         best_match = None
         best_overlap = 0
 
         for tt in self._task_types:
-            keywords = set(kw.lower() for kw in tt.get("keywords", []))
-            overlap = len(text_tokens & keywords)
+            keyword_tokens = set()
+            for kw in tt.get("keywords", []):
+                normalized_kw = re.sub(r"[^a-z0-9\s]+", " ", kw.lower())
+                keyword_tokens.update(normalized_kw.split())
+
+            overlap = len(text_tokens & keyword_tokens)
 
             if overlap > best_overlap:
                 best_overlap = overlap
                 best_match = tt
 
-        if best_match and best_overlap >= 2:
+        if best_match and best_overlap >= 1:
             # Find category name
             cat_id = best_match["category_id"]
             for cat in self._categories:

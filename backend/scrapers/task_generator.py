@@ -45,16 +45,22 @@ class TaskGenerator:
         for service in services:
             for location in locations:
                 try:
+                    print(f"\n--- Processing service: {service.title} in {location} ---")
+
                     task_doc = self._build_task_document(service, location)
                     if not task_doc:
+                        print("Task document could not be built.")
                         results["errors"] += 1
                         continue
 
                     # Upsert: update if dedup_key exists, insert if new
                     dedup_key = task_doc["dedup_key"]
+                    print(f"Dedup key: {dedup_key}")
+
                     existing = tasks_collection.find_one({"dedup_key": dedup_key})
 
                     if existing:
+                        print("Existing task found. Updating...")
                         # Update metadata fields only
                         tasks_collection.update_one(
                             {"dedup_key": dedup_key},
@@ -70,11 +76,12 @@ class TaskGenerator:
                         )
                         results["updated"] += 1
                     else:
+                        print("No existing task found. Inserting...")
                         tasks_collection.insert_one(task_doc)
                         results["inserted"] += 1
 
                 except Exception as e:
-                    print(f"Error generating task for {service.title} in {location}: {e}")
+                    print(f"Error generating task for {service.title} in {location}: {repr(e)}")
                     results["errors"] += 1
 
         return results
@@ -88,11 +95,13 @@ class TaskGenerator:
         Returns None if category mapping fails completely.
         """
         # Map to internal categories
+        print("Mapping category...")
         mapping = self.mapper.map(
             source_slug=service.source_slug or service.external_category,
             title=service.title,
             description=service.description,
         )
+        print("Mapping result:", mapping)
 
         if not mapping:
             return None
@@ -116,7 +125,16 @@ class TaskGenerator:
         description = service.description
         if price_range:
             description += f"\n\nEstimated rate: ${price_range['min_hourly']:.0f}-${price_range['max_hourly']:.0f}/hr"
-        description += f"\n\nSource: TaskRabbit ({service.source_url})"
+        description += f"\n\nSource: {self.source.title()} ({service.source_url})"
+
+        print("Geocoding location...")
+        coordinates = geocode_location(location)
+        print("Coordinates:", coordinates)
+
+        estimated_difficulty = estimate_task_difficulty(
+            {"title": service.title, "description": service.description}
+        )
+        print("Estimated difficulty:", estimated_difficulty)
 
         # Build the task document
         task_doc = {
@@ -131,10 +149,8 @@ class TaskGenerator:
             "tasker_username": None,
             # Recommendation fields
             "posted_at": datetime.utcnow(),
-            "estimated_difficulty": estimate_task_difficulty(
-                {"title": service.title, "description": service.description}
-            ),
-            "coordinates": geocode_location(location),
+            "estimated_difficulty": estimated_difficulty,
+            "coordinates": coordinates,
             "budget_range": None,
             # Scraper-specific fields
             "source": self.source,
@@ -148,4 +164,5 @@ class TaskGenerator:
             "dedup_key": dedup_key,
         }
 
+        print("Built task doc successfully.")
         return task_doc
