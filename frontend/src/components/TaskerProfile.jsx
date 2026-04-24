@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 
-// A small component to display star ratings visually
 const StarRating = ({ rating }) => {
+  const rounded = Math.round(Number(rating) || 0);
+
   return (
-    <div className="flex items-center">
+    <div className="flex items-center gap-1">
       {[...Array(5)].map((_, index) => (
         <svg
           key={index}
-          className={`w-5 h-5 ${index < rating ? 'text-yellow-400' : 'text-gray-300'}`}
+          className={`h-5 w-5 ${index < rounded ? "text-yellow-400" : "text-slate-300"}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -24,21 +25,28 @@ function TaskerProfile() {
   const { username } = useParams();
   const [tasker, setTasker] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const encodedUsername = encodeURIComponent(username);
-        const profilePromise = axios.get(`http://localhost:8000/api/taskers/${encodedUsername}`);
-        const reviewsPromise = axios.get(`http://localhost:8000/api/reviews/${encodedUsername}`);
-        
-        const [profileResponse, reviewsResponse] = await Promise.all([profilePromise, reviewsPromise]);
-        
+        const profilePromise = axios.get(
+          `http://localhost:8000/api/taskers/${encodedUsername}`
+        );
+        const reviewsPromise = axios.get(
+          `http://localhost:8000/api/reviews/${encodedUsername}`
+        );
+
+        const [profileResponse, reviewsResponse] = await Promise.all([
+          profilePromise,
+          reviewsPromise,
+        ]);
+
         setTasker(profileResponse.data);
-        setReviews(reviewsResponse.data);
+        setReviews(reviewsResponse.data || []);
       } catch (err) {
-        setError('Could not load tasker profile.');
+        setError("Could not load tasker profile.");
         console.error("Error fetching profile data:", err);
       }
     };
@@ -47,91 +55,159 @@ function TaskerProfile() {
   }, [username]);
 
   if (error) {
-    return <div className="text-center text-red-500 mt-10">{error}</div>;
+    return (
+      <div className="min-h-[70vh] bg-[#f5f3f1] px-6 py-10">
+        <div className="mx-auto max-w-[900px] rounded-[2rem] border border-red-200 bg-red-50 px-6 py-5 text-red-600">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   if (!tasker) {
-    return <div className="text-center mt-10">Loading profile...</div>;
+    return (
+      <div className="min-h-[70vh] bg-[#f5f3f1] px-6 py-10">
+        <div className="mx-auto max-w-[900px] rounded-[2rem] border border-[#e7dfd7] bg-white px-6 py-5 text-slate-500">
+          Loading profile...
+        </div>
+      </div>
+    );
   }
 
-  const averageRating = reviews.length > 0
-    ? (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)
-    : 0;
-  
-  // Helper to get initials from a name for the fallback avatar
+  const averageRating =
+    reviews.length > 0
+      ? (
+          reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length
+        ).toFixed(1)
+      : 0;
+
   const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  }
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
-      <div className="flex items-center space-x-6">
-        {/* NEW: Profile Picture Section */}
-        {tasker.profile_image_url ? (
-          <img 
-            src={tasker.profile_image_url} 
-            alt={tasker.full_name}
-            className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
-          />
-        ) : (
-          // Fallback avatar if no image is provided
-          <div className="w-24 h-24 rounded-full bg-blue-500 text-white flex items-center justify-center text-3xl font-bold">
-            {getInitials(tasker.full_name)}
-          </div>
-        )}
-
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800">{tasker.full_name}</h2>
-          <p className="text-gray-500 mb-2">{tasker.location || 'Location not specified'}</p>
-          
-          {reviews.length > 0 && (
-            <div className="flex items-center space-x-2">
-                <StarRating rating={averageRating} />
-                <span className="text-gray-600 font-semibold">{averageRating}</span>
-                <span className="text-gray-500">({reviews.length} reviews)</span>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* NEW: Bio Section */}
-      {tasker.bio && (
-        <div className="mt-8">
-            <h3 className="text-xl font-semibold text-gray-700">About Me</h3>
-            <p className="text-gray-600 mt-2">{tasker.bio}</p>
-        </div>
-      )}
-
-      <div className="mt-6">
-        <h3 className="text-xl font-semibold text-gray-700">Skills</h3>
-        {tasker.skills && tasker.skills.length > 0 ? (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {tasker.skills.map((skill, index) => (
-              <span key={index} className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                {skill}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 mt-2">No skills listed.</p>
-        )}
-      </div>
-
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold text-gray-700">Client Reviews</h3>
-        {reviews.length > 0 ? (
-          <div className="space-y-6 mt-4">
-            {reviews.map(review => (
-              <div key={review._id} className="border-t pt-4">
-                <StarRating rating={review.rating} />
-                <p className="text-gray-700 mt-2">{review.comment}</p>
-                <p className="text-xs text-gray-400 mt-1">- Reviewed by {review.client_username}</p>
+    <div className="min-h-[82vh] bg-[#f5f3f1] px-6 py-10">
+      <div className="mx-auto max-w-[1100px]">
+        {/* Hero card */}
+        <div className="rounded-[2rem] border border-[#e7dfd7] bg-white p-8 shadow-[0_18px_50px_rgba(15,23,42,0.05)] sm:p-10">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+            {tasker.profile_image_url ? (
+              <img
+                src={tasker.profile_image_url}
+                alt={tasker.full_name}
+                className="h-28 w-28 rounded-full object-cover border border-[#e7dfd7]"
+              />
+            ) : (
+              <div className="flex h-28 w-28 items-center justify-center rounded-full bg-[#2b8f8a] text-3xl font-semibold text-white">
+                {getInitials(tasker.full_name)}
               </div>
-            ))}
+            )}
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8f3737]">
+                Tasker Profile
+              </p>
+              <h1 className="mt-3 font-serif text-4xl text-slate-900">
+                {tasker.full_name}
+              </h1>
+              <p className="mt-2 text-sm text-slate-500">
+                {tasker.location || "Location not specified"}
+              </p>
+
+              {reviews.length > 0 && (
+                <div className="mt-4 flex items-center gap-3">
+                  <StarRating rating={averageRating} />
+                  <span className="text-sm font-semibold text-slate-700">
+                    {averageRating}
+                  </span>
+                  <span className="text-sm text-slate-500">
+                    ({reviews.length} reviews)
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        ) : (
-          <p className="text-gray-500 mt-2">This tasker has no reviews yet.</p>
-        )}
+        </div>
+
+        <div className="mt-8 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+          {/* Left column */}
+          <div className="space-y-8">
+            {tasker.bio && (
+              <section className="rounded-[2rem] border border-[#e7dfd7] bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,0.05)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8f3737]">
+                  About
+                </p>
+                <h2 className="mt-2 font-serif text-3xl text-slate-900">
+                  About Me
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-slate-600">
+                  {tasker.bio}
+                </p>
+              </section>
+            )}
+
+            <section className="rounded-[2rem] border border-[#e7dfd7] bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,0.05)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8f3737]">
+                Skills
+              </p>
+              <h2 className="mt-2 font-serif text-3xl text-slate-900">
+                What I Do
+              </h2>
+
+              {tasker.skills && tasker.skills.length > 0 ? (
+                <div className="mt-5 flex flex-wrap gap-3">
+                  {tasker.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="rounded-full border border-[#d7eceb] bg-[#eef8f7] px-4 py-2 text-sm font-medium text-[#2b8f8a]"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-slate-500">No skills listed.</p>
+              )}
+            </section>
+          </div>
+
+          {/* Reviews */}
+          <section className="rounded-[2rem] border border-[#e7dfd7] bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,0.05)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8f3737]">
+              Reviews
+            </p>
+            <h2 className="mt-2 font-serif text-3xl text-slate-900">
+              Client Reviews
+            </h2>
+
+            {reviews.length > 0 ? (
+              <div className="mt-6 space-y-5">
+                {reviews.map((review) => (
+                  <div
+                    key={review._id}
+                    className="rounded-[1.5rem] border border-[#e7dfd7] bg-[#fbf8f5] p-5"
+                  >
+                    <StarRating rating={review.rating} />
+                    <p className="mt-3 text-sm leading-7 text-slate-700">
+                      {review.comment}
+                    </p>
+                    <p className="mt-3 text-xs text-slate-500">
+                      Reviewed by {review.client_username}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-6 rounded-[1.5rem] border border-[#e7dfd7] bg-[#fbf8f5] px-5 py-6 text-sm text-slate-500">
+                This tasker has no reviews yet.
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );

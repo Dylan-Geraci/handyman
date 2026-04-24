@@ -1,31 +1,30 @@
-import { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { AuthContext } from '../context/AuthContext';
-import { Link, useLocation } from 'react-router-dom';
-import LeaveReview from './LeaveReview';
-import { softRed, actionTeal, successGreen, neutrals } from '../styles/theme';
+import { useState, useEffect, useContext, useMemo } from "react";
+import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
+import { Link, useLocation } from "react-router-dom";
+import LeaveReview from "./LeaveReview";
 
 function ClientDashboard() {
   const { user, token } = useContext(AuthContext);
   const location = useLocation();
-  const fromCategory = location.state?.fromCategory || null; // << central place
+  const fromCategory = location.state?.fromCategory || null;
 
   const [myTasks, setMyTasks] = useState([]);
   const [taskData, setTaskData] = useState({
-    title: '',
-    description: '',
-    location: '',
+    title: "",
+    description: "",
+    location: "",
   });
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedTaskForReview, setSelectedTaskForReview] = useState(null);
 
   const fetchMyTasks = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/my-client-tasks');
-      setMyTasks(response.data);
+      const response = await axios.get("http://localhost:8000/api/my-client-tasks");
+      setMyTasks(response.data || []);
     } catch (error) {
-      console.error('Error fetching my tasks:', error);
+      console.error("Error fetching my tasks:", error);
     }
   };
 
@@ -35,7 +34,6 @@ function ClientDashboard() {
     }
   }, [token]);
 
-  // Prefill the form when coming from Categories
   useEffect(() => {
     if (fromCategory) {
       setTaskData((prev) => ({
@@ -54,14 +52,15 @@ function ClientDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
+    setMessage("");
+
     try {
-      await axios.post('http://localhost:8000/api/tasks', taskData);
-      setMessage('Task posted successfully!');
-      setTaskData({ title: '', description: '', location: '' });
+      await axios.post("http://localhost:8000/api/tasks", taskData);
+      setMessage("Task posted successfully!");
+      setTaskData({ title: "", description: "", location: "" });
       fetchMyTasks();
     } catch (error) {
-      setMessage(error.response?.data?.detail || 'Failed to post task.');
+      setMessage(error.response?.data?.detail || "Failed to post task.");
     }
   };
 
@@ -70,8 +69,8 @@ function ClientDashboard() {
       await axios.put(`http://localhost:8000/api/tasks/${taskId}/complete`);
       fetchMyTasks();
     } catch (error) {
-      console.error('Error completing task:', error);
-      alert('Failed to mark task as complete.');
+      console.error("Error completing task:", error);
+      alert("Failed to mark task as complete.");
     }
   };
 
@@ -85,21 +84,34 @@ function ClientDashboard() {
     setIsReviewModalOpen(false);
   };
 
-  const getStatusColor = (status) => {
+  const getStatusStyles = (status) => {
     switch (status) {
-      case 'open':
-        return 'bg-gray-200 text-gray-800';
-      case 'in_progress':
-        return 'bg-gray-200 text-gray-800';
-      case 'completed':
-        return `${successGreen.bg} ${successGreen.text}`;
+      case "open":
+        return "bg-[#f4f0ec] text-slate-700 border border-[#e7dfd7]";
+      case "in_progress":
+        return "bg-amber-50 text-amber-700 border border-amber-200";
+      case "completed":
+        return "bg-emerald-50 text-emerald-700 border border-emerald-200";
       default:
-        return 'bg-gray-200 text-gray-800';
+        return "bg-[#f4f0ec] text-slate-700 border border-[#e7dfd7]";
     }
   };
 
+  const stats = useMemo(() => {
+    const open = myTasks.filter((task) => task.status === "open").length;
+    const inProgress = myTasks.filter((task) => task.status === "in_progress").length;
+    const completed = myTasks.filter((task) => task.status === "completed").length;
+
+    return {
+      total: myTasks.length,
+      open,
+      inProgress,
+      completed,
+    };
+  }, [myTasks]);
+
   return (
-    <div className={`${neutrals.card} p-8 rounded-lg shadow-md ${neutrals.border}`}>
+    <div className="min-h-[80vh] bg-[#f5f3f1] px-6 py-10">
       {isReviewModalOpen && selectedTaskForReview && (
         <LeaveReview
           task={selectedTaskForReview}
@@ -108,173 +120,253 @@ function ClientDashboard() {
         />
       )}
 
-      <h2 className="text-2xl font-bold mb-4">Client Dashboard</h2>
-      <p className="mb-6 text-gray-700">Welcome, {user?.full_name}!</p>
-      <div className="mb-6">
-        <Link
-          to="/client/tasks"
-          className={`inline-flex items-center justify-center rounded-md ${softRed.main} px-4 py-2 text-sm font-semibold text-white ${softRed.hover} shadow-sm`}
-        >
-          View my tasks
-        </Link>
-      </div>
+      <div className="mx-auto w-full max-w-[1380px]">
+        {/* Top intro */}
+        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8f3737]">
+              Client Dashboard
+            </p>
+            <h1 className="mt-3 font-serif text-4xl text-slate-900 sm:text-5xl">
+              Welcome{user?.full_name ? `, ${user.full_name}` : ""}.
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
+              Post new tasks, keep an eye on progress, and manage everything from one place.
+            </p>
+          </div>
 
-      {/* Banner when coming from Categories */}
-      {fromCategory && (
-        <div className={`mb-4 rounded-md ${successGreen.bg} ${successGreen.border} px-4 py-2 text-sm ${successGreen.text}`}>
-          Starting a task from{' '}
-          <span className="font-semibold">
-            {fromCategory.categoryName} → {fromCategory.taskName}
-          </span>
-          . You can edit the details below before posting.
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/client/tasks"
+              className="rounded-full border border-[#8f3737] px-5 py-3 text-sm font-medium text-[#8f3737] transition hover:bg-[#8f3737] hover:text-white"
+            >
+              View My Tasks
+            </Link>
+            <Link
+              to="/find-tasker"
+              className="rounded-full bg-[#8f3737] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#742c2c]"
+            >
+              Find a Tasker
+            </Link>
+          </div>
         </div>
-      )}
 
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-4">Post a New Task</h3>
-        <form
-          onSubmit={handleSubmit}
-          className="bg-gray-50 p-6 rounded-lg shadow-sm"
-        >
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
-              Task Title
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={taskData.title}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border rounded-md"
-            />
+        {/* Category banner */}
+        {fromCategory && (
+          <div className="mb-8 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+            Starting a task from{" "}
+            <span className="font-semibold">
+              {fromCategory.categoryName} → {fromCategory.taskName}
+            </span>
+            . You can edit the details below before posting.
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={taskData.description}
-              onChange={handleChange}
-              required
-              rows="4"
-              className="w-full px-3 py-2 border rounded-md"
-            ></textarea>
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
-              Location
-            </label>
-            <input
-              type="text"
-              name="location"
-              value={taskData.location}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border rounded-md"
-            />
-          </div>
-          <button
-            type="submit"
-            className={`text-white font-bold py-2 px-4 rounded ${softRed.main} ${softRed.hover}`}
-          >
-            Post Task
-          </button>
-        </form>
-        {message && (
-          <p
-            className={`mt-4 text-center ${
-              message.includes('successfully')
-                ? 'text-green-500'
-                : 'text-red-500'
-            }`}
-          >
-            {message}
-          </p>
         )}
-      </div>
 
-      <div className="mt-10">
-        <h3 className="text-xl font-semibold mb-4">My Posted Tasks</h3>
-        <div className="space-y-4">
-          {myTasks.map((task) => (
-              <div
-                key={task._id}
-                className={`${neutrals.card} p-4 rounded-lg shadow-sm ${neutrals.border}`}
-              >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-bold text-gray-800">{task.title}</h4>
-                  <p className="text-gray-600 text-sm mt-1">
-                    {task.description}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Location: {task.location}
-                  </p>
-                </div>
-                <span
-                  className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                    task.status
-                  )}`}
-                >
-                  {task.status.replace('_', ' ')}
-                </span>
-              </div>
-
-                    {task.status === 'in_progress' && (
-                <div className="mt-3 flex items-center justify-between">
-                  <p className="text-xs text-green-700">
-                    Accepted by:{' '}
-                    <Link
-                      to={`/taskers/${encodeURIComponent(
-                        task.tasker_username
-                      )}`}
-                      className="font-bold hover:underline ml-1"
-                    >
-                      {task.tasker_username}
-                    </Link>
-                  </p>
-                  <div className="flex space-x-2">
-                    <Link
-                      to={`/tasks/${task._id}/chat`}
-                      className={`text-white font-bold py-1 px-3 rounded text-sm ${actionTeal.main} ${actionTeal.hover}`}
-                    >
-                      Chat
-                    </Link>
-                    <button
-                      onClick={() => handleCompleteTask(task._id)}
-                      className={`text-white font-bold py-1 px-3 rounded text-sm ${actionTeal.main} ${actionTeal.hover}`}
-                    >
-                      Mark as Complete
-                    </button>
-                  </div>
-                </div>
-              )}
-
-                    {task.status === 'completed' && (
-                <div className="mt-3 flex items-center justify-between">
-                  <p className="text-xs text-gray-500">
-                    Completed by:{' '}
-                    <Link
-                      to={`/taskers/${encodeURIComponent(
-                        task.tasker_username
-                      )}`}
-                      className="font-bold hover:underline ml-1"
-                    >
-                      {task.tasker_username}
-                    </Link>
-                  </p>
-                  <button
-                    onClick={() => openReviewModal(task)}
-                    className={`text-white font-bold py-1 px-3 rounded text-sm ${actionTeal.main} ${actionTeal.hover}`}
-                  >
-                    Leave Review
-                  </button>
-                </div>
-              )}
+        {/* Summary cards */}
+        <div className="mb-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            { label: "Total Tasks", value: stats.total },
+            { label: "Open", value: stats.open },
+            { label: "In Progress", value: stats.inProgress },
+            { label: "Completed", value: stats.completed },
+          ].map((card) => (
+            <div
+              key={card.label}
+              className="rounded-[1.75rem] border border-[#e7dfd7] bg-white p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)]"
+            >
+              <p className="text-sm text-slate-500">{card.label}</p>
+              <p className="mt-3 font-serif text-4xl text-slate-900">{card.value}</p>
             </div>
           ))}
+        </div>
+
+        <div className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
+          {/* Post task */}
+          <section className="rounded-[2rem] border border-[#e7dfd7] bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,0.05)] sm:p-8">
+            <div className="mb-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8f3737]">
+                Create
+              </p>
+              <h2 className="mt-2 font-serif text-3xl text-slate-900">
+                Post a New Task
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Describe what you need and we’ll help you get it moving.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Task Title
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={taskData.title}
+                  onChange={handleChange}
+                  required
+                  className="h-14 w-full rounded-2xl border border-[#e5ddd6] bg-[#fbf8f5] px-4 text-slate-900 outline-none transition focus:border-[#8f3737]"
+                  placeholder="e.g. Mount a TV in living room"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={taskData.description}
+                  onChange={handleChange}
+                  required
+                  rows="5"
+                  className="w-full rounded-2xl border border-[#e5ddd6] bg-[#fbf8f5] px-4 py-4 text-slate-900 outline-none transition focus:border-[#8f3737]"
+                  placeholder="Share the details, timing, and anything the tasker should know."
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={taskData.location}
+                  onChange={handleChange}
+                  required
+                  className="h-14 w-full rounded-2xl border border-[#e5ddd6] bg-[#fbf8f5] px-4 text-slate-900 outline-none transition focus:border-[#8f3737]"
+                  placeholder="e.g. Fullerton, CA"
+                />
+              </div>
+
+              {message && (
+                <div
+                  className={`rounded-2xl px-4 py-3 text-sm ${
+                    message.includes("successfully")
+                      ? "border border-green-200 bg-green-50 text-green-700"
+                      : "border border-red-200 bg-red-50 text-red-600"
+                  }`}
+                >
+                  {message}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="h-14 w-full rounded-full bg-[#8f3737] text-sm font-semibold text-white transition hover:bg-[#742c2c]"
+              >
+                Post Task
+              </button>
+            </form>
+          </section>
+
+          {/* Recent tasks */}
+          <section className="rounded-[2rem] border border-[#e7dfd7] bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,0.05)] sm:p-8">
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8f3737]">
+                  Activity
+                </p>
+                <h2 className="mt-2 font-serif text-3xl text-slate-900">
+                  My Posted Tasks
+                </h2>
+              </div>
+
+              <Link
+                to="/client/tasks"
+                className="text-sm font-medium text-[#8f3737] transition hover:underline"
+              >
+                View all
+              </Link>
+            </div>
+
+            <div className="space-y-4">
+              {myTasks.length === 0 ? (
+                <div className="rounded-[1.5rem] border border-[#e7dfd7] bg-[#fbf8f5] px-5 py-6 text-sm text-slate-500">
+                  You haven&apos;t posted any tasks yet.
+                </div>
+              ) : (
+                myTasks.slice(0, 4).map((task) => (
+                  <div
+                    key={task._id}
+                    className="rounded-[1.5rem] border border-[#e7dfd7] bg-[#fbf8f5] p-5"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="pr-2">
+                        <h3 className="text-lg font-semibold text-slate-900">
+                          {task.title || "Untitled task"}
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">
+                          {task.description || "No description provided."}
+                        </p>
+                        <p className="mt-3 text-xs text-slate-500">
+                          Location: {task.location || "Not specified"}
+                        </p>
+
+                        {(task.status === "in_progress" || task.status === "completed") &&
+                          task.tasker_username && (
+                            <p className="mt-2 text-xs text-slate-500">
+                              Tasker:{" "}
+                              <Link
+                                to={`/taskers/${encodeURIComponent(task.tasker_username)}`}
+                                className="font-semibold text-[#8f3737] hover:underline"
+                              >
+                                {task.tasker_username}
+                              </Link>
+                            </p>
+                          )}
+                      </div>
+
+                      <span
+                        className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyles(
+                          task.status
+                        )}`}
+                      >
+                        {(task.status || "open").replace("_", " ")}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {task.status === "in_progress" && (
+                        <>
+                          <Link
+                            to={`/tasks/${task._id}/chat`}
+                            className="rounded-full bg-[#2b8f8a] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#227670]"
+                          >
+                            Chat
+                          </Link>
+                          <button
+                            onClick={() => handleCompleteTask(task._id)}
+                            className="rounded-full border border-[#2b8f8a] px-4 py-2 text-xs font-semibold text-[#2b8f8a] transition hover:bg-[#2b8f8a] hover:text-white"
+                          >
+                            Mark Complete
+                          </button>
+                        </>
+                      )}
+
+                      {task.status === "completed" && (
+                        <button
+                          onClick={() => openReviewModal(task)}
+                          className="rounded-full bg-[#2b8f8a] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#227670]"
+                        >
+                          Leave Review
+                        </button>
+                      )}
+
+                      <Link
+                        to="/client/tasks"
+                        className="rounded-full border border-[#e2d8cf] px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-white"
+                      >
+                        Manage Task
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
         </div>
       </div>
     </div>
