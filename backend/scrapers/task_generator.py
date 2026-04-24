@@ -21,7 +21,7 @@ class TaskGenerator:
 
     SCRAPER_VERSION = "1.0"
 
-    def __init__(self, source: str = "taskrabbit"):
+    def __init__(self, source: str = "craigslist"):
         self.source = source
         self.mapper = CategoryMapper()
 

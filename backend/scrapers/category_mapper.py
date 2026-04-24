@@ -90,6 +90,27 @@ TASKRABBIT_SLUG_MAP: Dict[str, Tuple[str, str]] = {
     "wait-for-delivery": ("General Help", "Wait for Delivery"),
 }
 
+# Craigslist gig category slugs -> (our category name, our task type name)
+CRAIGSLIST_SLUG_MAP: Dict[str, Tuple[str, str]] = {
+    # Labor gigs (lbg)
+    "labor-gig": ("Moving & Packing", "Heavy Lifting"),
+
+    # Domestic gigs (dmg)
+    "domestic-gig": ("Cleaning", "Home Cleaning"),
+
+    # Event gigs (evg)
+    "event-gig": ("General Help", "Event Help"),
+
+    # Crew gigs (cwg)
+    "crew-gig": ("Outdoor Help", "Yard Work"),
+
+    # Less relevant but still mappable
+    "creative-gig": ("General Help", "Other"),
+    "computer-gig": ("General Help", "Other"),
+    "talent-gig": ("General Help", "Other"),
+    "writing-gig": ("General Help", "Other"),
+}
+
 
 class CategoryMapper:
     """Maps external categories to internal category_id and task_type_id."""
@@ -147,17 +168,25 @@ class CategoryMapper:
 
         print(f"Mapping source_slug='{source_slug}' normalized='{normalized_slug}' title='{title}' title_slug='{normalized_title_slug}'")
 
-        # 1. Try static slug mapping
-        if normalized_slug in TASKRABBIT_SLUG_MAP:
-            cat_name, tt_name = TASKRABBIT_SLUG_MAP[normalized_slug]
-            print(f"Matched static slug map with source slug: {normalized_slug} -> {cat_name} / {tt_name}")
-            return self._resolve_names(cat_name, tt_name)
+        # 1. Try static slug mapping (check both maps)
+        for slug_map, map_name in [
+            (CRAIGSLIST_SLUG_MAP, "Craigslist"),
+            (TASKRABBIT_SLUG_MAP, "TaskRabbit"),
+        ]:
+            if normalized_slug in slug_map:
+                cat_name, tt_name = slug_map[normalized_slug]
+                print(f"Matched {map_name} slug map with source slug: {normalized_slug} -> {cat_name} / {tt_name}")
+                return self._resolve_names(cat_name, tt_name)
 
         # 1b. Try normalized title as slug
-        if normalized_title_slug in TASKRABBIT_SLUG_MAP:
-            cat_name, tt_name = TASKRABBIT_SLUG_MAP[normalized_title_slug]
-            print(f"Matched static slug map with title slug: {normalized_title_slug} -> {cat_name} / {tt_name}")
-            return self._resolve_names(cat_name, tt_name)
+        for slug_map, map_name in [
+            (CRAIGSLIST_SLUG_MAP, "Craigslist"),
+            (TASKRABBIT_SLUG_MAP, "TaskRabbit"),
+        ]:
+            if normalized_title_slug in slug_map:
+                cat_name, tt_name = slug_map[normalized_title_slug]
+                print(f"Matched {map_name} slug map with title slug: {normalized_title_slug} -> {cat_name} / {tt_name}")
+                return self._resolve_names(cat_name, tt_name)
 
         # 2. Fallback: keyword matching against task_types keywords
         result = self._keyword_match(title, description)

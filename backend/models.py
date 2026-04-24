@@ -177,7 +177,7 @@ class RecommendationResponse(BaseModel):
 # --- Scraper Models ---
 class ScrapeRequest(BaseModel):
     """Request model for triggering a scrape run."""
-    source: str = "taskrabbit"
+    source: str = "craigslist"
     locations: List[str] = ["New York, NY"]
 
 

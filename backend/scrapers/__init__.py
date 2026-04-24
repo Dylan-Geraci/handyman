@@ -1,19 +1,18 @@
 """
 Scraper module for pulling external task/service data.
-Supports multiple sources (TaskRabbit, etc.) and auto-generates tasks.
+Supports Craigslist as primary source, with auto-generation into MongoDB tasks.
 """
 
-from scrapers.taskrabbit_scraper import TaskRabbitScraper
+from scrapers.craigslist_scraper import CraigslistScraper
 from scrapers.task_generator import TaskGenerator
-from scrapers.category_mapper import CategoryMapper
 
 
-async def run_scraper(source: str = "taskrabbit", locations: list = None):
+async def run_scraper(source: str = "craigslist", locations: list = None):
     """
     Run the full scrape -> map -> generate -> insert pipeline.
 
     Args:
-        source: Which site to scrape ("taskrabbit")
+        source: Which site to scrape ("craigslist")
         locations: List of city strings to generate tasks for
 
     Returns:
@@ -24,8 +23,8 @@ async def run_scraper(source: str = "taskrabbit", locations: list = None):
 
     source = source.strip().lower()
 
-    if source == "taskrabbit":
-        scraper = TaskRabbitScraper()
+    if source == "craigslist":
+        scraper = CraigslistScraper()
     else:
         raise ValueError(f"Unknown scraper source: {source}")
 

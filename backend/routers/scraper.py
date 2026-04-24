@@ -98,7 +98,7 @@ async def get_scraper_status(
 @router.delete("/tasks")
 async def delete_scraped_tasks(
     current_user: Annotated[dict, Depends(get_current_user)],
-    source: str = "taskrabbit"
+    source: str = "craigslist"
 ):
     """
     Delete all auto-generated tasks from a given source (admin only).
