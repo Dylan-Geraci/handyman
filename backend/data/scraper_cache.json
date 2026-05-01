@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "description": "Pre-captured Craigslist scrape results for demo replay. Used when DEMO_MODE=true so the demo doesn't depend on Craigslist availability.",
+    "captured_at": "2026-04-30",
+    "source": "craigslist"
+  },
+  "tasks": [
+    {
+      "title": "Help moving studio apartment - 4 hours",
+      "description": "Moving from a 4th-floor walkup studio in Williamsburg to a ground-floor unit in Bushwick. Need 1-2 strong helpers. Truck already rented. ~25 boxes plus a queen mattress, dresser, sofa.",
+      "location": "Brooklyn, NY",
+      "external_price_range": {"min_hourly": 25, "max_hourly": 40, "currency": "USD"},
+      "estimated_difficulty": 1,
+      "source_url": "https://newyork.craigslist.org/lab/demo-001"
+    },
+    {
+      "title": "Drywall patch and paint - 3 holes",
+      "description": "Three small drywall holes in living room from removed shelving. Need patching, sanding, and color-matched paint touch-up. Paint and supplies will be provided.",
+      "location": "Manhattan, NY",
+      "external_price_range": {"min_hourly": 35, "max_hourly": 55, "currency": "USD"},
+      "estimated_difficulty": 2,
+      "source_url": "https://newyork.craigslist.org/lab/demo-002"
+    },
+    {
+      "title": "IKEA PAX wardrobe assembly",
+      "description": "Need help assembling a PAX wardrobe system - 3 frames, 2 sets of doors, internal organizers. All parts on-site. Estimated 3-4 hours for an experienced assembler.",
+      "location": "Brooklyn, NY",
+      "external_price_range": {"min_hourly": 30, "max_hourly": 50, "currency": "USD"},
+      "estimated_difficulty": 2,
+      "source_url": "https://newyork.craigslist.org/lab/demo-003"
+    },
+    {
+      "title": "Yard cleanup and bagged removal",
+      "description": "Front and back yard need cleanup - rake leaves, trim back overgrown bushes, bag everything for removal. Tools provided. Estimated 4-5 hours.",
+      "location": "Queens, NY",
+      "external_price_range": {"min_hourly": 20, "max_hourly": 30, "currency": "USD"},
+      "estimated_difficulty": 1,
+      "source_url": "https://newyork.craigslist.org/lab/demo-004"
+    },
+    {
+      "title": "Catering helper for private event - Saturday",
+      "description": "Looking for one extra hand for a 40-person dinner party Saturday evening. Tasks: plating, refilling drinks, light cleanup. 5-hour shift. Black shirt required.",
+      "location": "Manhattan, NY",
+      "external_price_range": {"min_hourly": 22, "max_hourly": 28, "currency": "USD"},
+      "estimated_difficulty": 1,
+      "source_url": "https://newyork.craigslist.org/evg/demo-005"
+    },
+    {
+      "title": "Mount 3 floating shelves in nursery",
+      "description": "Need 3 floating shelves mounted, properly anchored into studs (drywall over wood). Shelves are pre-bought. Stud finder helpful but not required.",
+      "location": "Brooklyn, NY",
+      "external_price_range": {"min_hourly": 35, "max_hourly": 60, "currency": "USD"},
+      "estimated_difficulty": 1,
+      "source_url": "https://newyork.craigslist.org/lab/demo-006"
+    },
+    {
+      "title": "Replace bathroom faucet and shutoff valves",
+      "description": "Old bathroom faucet is leaking from base. Need full replacement plus the two angle stop valves under the sink. New faucet purchased. Should take 1-2 hours.",
+      "location": "Manhattan, NY",
+      "external_price_range": {"min_hourly": 60, "max_hourly": 90, "currency": "USD"},
+      "estimated_difficulty": 2,
+      "source_url": "https://newyork.craigslist.org/lab/demo-007"
+    },
+    {
+      "title": "Move large desk - 2nd floor walk-up",
+      "description": "Need 2 people to help move a large L-shaped desk from a moving truck up to a 2nd floor walk-up apartment. ~20 minutes of actual work. Tip + cash on completion.",
+      "location": "Brooklyn, NY",
+      "external_price_range": {"min_hourly": 30, "max_hourly": 50, "currency": "USD"},
+      "estimated_difficulty": 1,
+      "source_url": "https://newyork.craigslist.org/lab/demo-008"
+    },
+    {
+      "title": "Bartender for engagement party - Sunday afternoon",
+      "description": "Hosting a 50-person engagement party Sunday 2-7pm. Need an experienced bartender with their own kit. Beer/wine plus a signature cocktail menu (3 drinks).",
+      "location": "Queens, NY",
+      "external_price_range": {"min_hourly": 35, "max_hourly": 50, "currency": "USD"},
+      "estimated_difficulty": 2,
+      "source_url": "https://newyork.craigslist.org/evg/demo-009"
+    },
+    {
+      "title": "Touch-up painting in hallway and stairwell",
+      "description": "Need touch-up paint work in a long hallway and the connecting stairwell - scuffs and a few small holes. Paint matched and on-site. ~3 hours of careful work.",
+      "location": "Manhattan, NY",
+      "external_price_range": {"min_hourly": 28, "max_hourly": 40, "currency": "USD"},
+      "estimated_difficulty": 1,
+      "source_url": "https://newyork.craigslist.org/lab/demo-010"
+    },
+    {
+      "title": "Deep clean before move-out",
+      "description": "Studio apartment needs deep cleaning before move-out inspection - oven, fridge, baseboards, inside cabinets, bathroom tile. Supplies will be provided.",
+      "location": "Brooklyn, NY",
+      "external_price_range": {"min_hourly": 25, "max_hourly": 35, "currency": "USD"},
+      "estimated_difficulty": 1,
+      "source_url": "https://newyork.craigslist.org/dmg/demo-011"
+    },
+    {
+      "title": "Build IKEA bunk bed - kids room",
+      "description": "Need help assembling a KURA reversible bunk bed plus a small matching dresser. About 3 hours total for one experienced assembler.",
+      "location": "Queens, NY",
+      "external_price_range": {"min_hourly": 30, "max_hourly": 45, "currency": "USD"},
+      "estimated_difficulty": 2,
+      "source_url": "https://newyork.craigslist.org/lab/demo-012"
+    },
+    {
+      "title": "Light fixture swap - 2 ceiling fans",
+      "description": "Replace 2 existing ceiling light fixtures with new Hunter ceiling fans. Wiring already in place. Estimated 1 hour per fixture.",
+      "location": "Manhattan, NY",
+      "external_price_range": {"min_hourly": 50, "max_hourly": 80, "currency": "USD"},
+      "estimated_difficulty": 2,
+      "source_url": "https://newyork.craigslist.org/lab/demo-013"
+    },
+    {
+      "title": "Help loading moving truck - 2 hours Saturday morning",
+      "description": "Loading a 16-ft U-Haul Saturday 9am - mostly boxes plus a few pieces of furniture (sofa, mattress, table). Truck parked right out front.",
+      "location": "Brooklyn, NY",
+      "external_price_range": {"min_hourly": 25, "max_hourly": 35, "currency": "USD"},
+      "estimated_difficulty": 1,
+      "source_url": "https://newyork.craigslist.org/lab/demo-014"
+    },
+    {
+      "title": "Furniture assembly - West Elm dining set",
+      "description": "Just received a West Elm dining table + 6 chairs. Need everything assembled and packaging cleared out. ~3 hours of work.",
+      "location": "Manhattan, NY",
+      "external_price_range": {"min_hourly": 35, "max_hourly": 55, "currency": "USD"},
+      "estimated_difficulty": 1,
+      "source_url": "https://newyork.craigslist.org/lab/demo-015"
+    }
+  ]
+}

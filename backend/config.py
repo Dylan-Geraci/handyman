@@ -22,6 +22,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # --- Database ---
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# --- Demo Mode ---
+# When true, the app uses cached AI responses and replays scrapes from a JSON
+# file instead of calling Gemini live or hitting Craigslist. Used for the expo
+# demo so the walkthrough is instant and offline-safe.
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
+
 # --- Google Gemini AI Configuration ---
 try:
     gemini_api_key = os.getenv("GOOGLE_API_KEY")

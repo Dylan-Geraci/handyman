@@ -164,6 +164,12 @@ function TaskerDashboard() {
 
           <div className="flex flex-wrap gap-3">
             <Link
+              to="/recommended"
+              className="rounded-full bg-gradient-to-r from-[#2b8f8a] to-[#227670] px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:from-[#227670] hover:to-[#1c5e59]"
+            >
+              ✨ See AI-ranked tasks for you
+            </Link>
+            <Link
               to="/profile/edit"
               className="rounded-full border border-[#8f3737] px-5 py-3 text-sm font-medium text-[#8f3737] transition hover:bg-[#8f3737] hover:text-white"
             >

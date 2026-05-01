@@ -26,7 +26,12 @@ export default function RecommendedTasksPage() {
         location_radius: radius,
         include_reasons: includeReasons,
       });
-      setTasks(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.recommendations)
+        ? data.recommendations
+        : [];
+      setTasks(list);
     } catch (e) {
       setError(e?.message || "Failed to load recommendations.");
     } finally {
@@ -42,14 +47,20 @@ export default function RecommendedTasksPage() {
 
   const handleAccept = async (task) => {
     if (!token) return;
+    const taskId = task.id || task._id;
+    if (!taskId) return;
 
-    setAcceptingId(task.id);
+    setAcceptingId(taskId);
     setError("");
 
     try {
-      await acceptTask(token, task.id);
-      // remove accepted task from list so it feels instant
-      setTasks((prev) => prev.filter((r) => (r.task?.id || r.id) !== task.id));
+      await acceptTask(token, taskId);
+      setTasks((prev) =>
+        prev.filter((r) => {
+          const t = r.task || r;
+          return (t.id || t._id) !== taskId;
+        })
+      );
     } catch (e) {
       setError(e?.message || "Failed to accept task.");
     } finally {
@@ -143,10 +154,11 @@ export default function RecommendedTasksPage() {
         <div className="space-y-3">
           {tasks.map((rec) => {
             const task = rec.task || rec;
-            const isAccepting = acceptingId === task.id;
+            const taskId = task.id || task._id;
+            const isAccepting = acceptingId === taskId;
 
             return (
-              <div key={task.id} className={isAccepting ? "opacity-70 pointer-events-none" : ""}>
+              <div key={taskId} className={isAccepting ? "opacity-70 pointer-events-none" : ""}>
                 <RecommendedTaskCard rec={rec} onAccept={handleAccept} />
               </div>
             );

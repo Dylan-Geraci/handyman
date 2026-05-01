@@ -3,6 +3,15 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+
+const DEMO_ACCOUNTS = [
+  { label: "Mike (Customer)", username: "mike_customer", password: "demo123", emoji: "🧑" },
+  { label: "Sarah (Tasker)", username: "alice_builder", password: "demo123", emoji: "🛠️" },
+  { label: "Admin", username: "admin", password: "demo123", emoji: "⚙️" },
+];
+
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -10,34 +19,50 @@ function Login() {
   const [resetEmail, setResetEmail] = useState("");
   const [showResetForm, setShowResetForm] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
+  const [demoLoading, setDemoLoading] = useState(null);
 
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const performLogin = async (uname, pwd) => {
+    const formData = new FormData();
+    formData.append("username", uname);
+    formData.append("password", pwd);
+
+    const tokenResponse = await axios.post(`${API_BASE}/token`, formData);
+    const accessToken = tokenResponse.data.access_token;
+    const loggedInUser = await login(accessToken);
+
+    if (loggedInUser) {
+      if (loggedInUser.role === "client") navigate("/client/dashboard");
+      else if (loggedInUser.role === "tasker") navigate("/tasker/dashboard");
+      else if (loggedInUser.role === "admin") navigate("/admin/dashboard");
+    } else {
+      throw new Error("Profile load failed");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     try {
-      const formData = new FormData();
-      formData.append("username", username);
-      formData.append("password", password);
-
-      const tokenResponse = await axios.post("http://localhost:8000/token", formData);
-      const accessToken = tokenResponse.data.access_token;
-
-      const loggedInUser = await login(accessToken);
-
-      if (loggedInUser) {
-        if (loggedInUser.role === "client") navigate("/client/dashboard");
-        else if (loggedInUser.role === "tasker") navigate("/tasker/dashboard");
-        else if (loggedInUser.role === "admin") navigate("/admin/dashboard");
-      } else {
-        setError("Login succeeded, but your profile could not be loaded.");
-      }
+      await performLogin(username, password);
     } catch (err) {
       setError("Invalid username or password.");
       console.error("Login failed:", err);
+    }
+  };
+
+  const handleDemoLogin = async (account) => {
+    setDemoLoading(account.username);
+    setError("");
+    try {
+      await performLogin(account.username, account.password);
+    } catch (err) {
+      setError(`Demo login failed for ${account.label}. Did you run the seed script?`);
+      console.error(err);
+    } finally {
+      setDemoLoading(null);
     }
   };
 
@@ -46,7 +71,7 @@ function Login() {
     setResetMessage("");
 
     try {
-      await axios.post("http://localhost:8000/forgot-password", { email: resetEmail });
+      await axios.post(`${API_BASE}/forgot-password`, { email: resetEmail });
       setResetMessage("Password reset link sent. Check your email.");
     } catch (err) {
       setResetMessage("Failed to send reset link.");
@@ -96,6 +121,30 @@ function Login() {
                   : "Sign in to manage tasks, messages, and your account."}
               </p>
             </div>
+
+            {DEMO_MODE && !showResetForm && (
+              <div className="mb-5 rounded-[2rem] border border-[#2b8f8a]/30 bg-gradient-to-br from-[#2b8f8a]/10 to-[#8f3737]/5 p-5">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#2b8f8a]">
+                  ✦ Demo Quick Login
+                </p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {DEMO_ACCOUNTS.map((acc) => (
+                    <button
+                      key={acc.username}
+                      type="button"
+                      onClick={() => handleDemoLogin(acc)}
+                      disabled={demoLoading !== null}
+                      className="rounded-2xl border border-[#e7dfd7] bg-white px-3 py-3 text-center text-xs font-semibold text-slate-700 shadow-sm transition hover:border-[#2b8f8a] hover:bg-[#fbf8f5] disabled:opacity-50"
+                    >
+                      <div className="text-xl">{acc.emoji}</div>
+                      <div className="mt-1 leading-tight">
+                        {demoLoading === acc.username ? "Logging in…" : acc.label}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="rounded-[2rem] border border-[#e7dfd7] bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-9 font-serif">
               {!showResetForm ? (

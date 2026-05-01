@@ -21,6 +21,8 @@ import ResetPassword from './components/ResetPassword';
 import Categories from './pages/Categories';
 import Footer from './components/Footer';
 import About from "./components/About";
+import RecommendedTasksPage from './pages/RecommendedTasksPage';
+import DemoBanner from './components/DemoBanner';
 
 // Pages that render their own full-bleed layout (no padding wrapper needed)
 const FULL_BLEED_ROUTES = ['/'];
@@ -31,6 +33,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen w-full bg-[#f5f3f1] text-slate-900">
+      <DemoBanner />
       <Navbar />
 
       <main className="w-full">
@@ -59,6 +62,7 @@ function AppContent() {
               <Route path="/client/dashboard" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
               <Route path="/client/tasks" element={<ProtectedRoute><ClientMyTasks /></ProtectedRoute>} />
               <Route path="/tasker/dashboard" element={<ProtectedRoute><TaskerDashboard /></ProtectedRoute>} />
+              <Route path="/recommended" element={<ProtectedRoute><RecommendedTasksPage /></ProtectedRoute>} />
               <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
               <Route path="/tasks/:taskId/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               <Route path="/find-tasker" element={<ProtectedRoute><FindTasker /></ProtectedRoute>} />

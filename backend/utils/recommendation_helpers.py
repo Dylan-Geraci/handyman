@@ -16,6 +16,7 @@ from typing import Dict, Optional
 from config import gemini_model
 from database import users_collection, tasks_collection, task_types_collection
 from utils.geocoding import get_distance_between_locations
+from utils import ai_cache
 
 
 def calculate_distance_score(tasker: dict, task: dict) -> float:
@@ -121,8 +122,18 @@ def estimate_task_difficulty(task: dict) -> int:
     Returns:
         Difficulty level (1-3)
     """
-    # Try AI estimation first
-    if gemini_model:
+    # Cache lookup keyed on title+description
+    cache_key = ai_cache.make_key(
+        "difficulty",
+        f"{task.get('title', '')}|{task.get('description', '')}"
+    )
+    cached = ai_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    # In demo mode, skip the live Gemini call on cache miss and use the
+    # heuristic fallback below — keeps the demo instant and offline-safe.
+    if gemini_model and not ai_cache.is_demo_mode():
         try:
             prompt = f"""
             Analyze this task and rate its difficulty level:
@@ -141,8 +152,8 @@ def estimate_task_difficulty(task: dict) -> int:
             response = gemini_model.generate_content(prompt)
             difficulty = int(response.text.strip())
 
-            # Validate response
             if difficulty in [1, 2, 3]:
+                ai_cache.set(cache_key, difficulty)
                 return difficulty
 
         except Exception as e:
@@ -356,7 +367,18 @@ def ai_semantic_match(tasker: dict, task: dict, task_type: Optional[dict] = None
     Returns:
         Semantic match score (0-30)
     """
-    if gemini_model:
+    cache_payload = (
+        f"{tasker.get('username', '')}|"
+        f"{','.join(tasker.get('skills', []))}|"
+        f"{task.get('title', '')}|{task.get('description', '')}"
+    )
+    cache_key = ai_cache.make_key("semantic", cache_payload)
+    cached = ai_cache.get(cache_key)
+    if cached is not None:
+        return float(cached)
+
+    # In demo mode, skip live Gemini and fall through to keyword matching.
+    if gemini_model and not ai_cache.is_demo_mode():
         try:
             # Get task type details if not provided
             if not task_type and task.get("task_type_id"):
@@ -395,9 +417,10 @@ def ai_semantic_match(tasker: dict, task: dict, task_type: Optional[dict] = None
             response = gemini_model.generate_content(prompt)
             ai_score = int(response.text.strip())
 
-            # Validate and convert to 0-30 scale
             if 0 <= ai_score <= 100:
-                return (ai_score / 100) * 30
+                final = (ai_score / 100) * 30
+                ai_cache.set(cache_key, final)
+                return final
 
         except Exception as e:
             print(f"AI semantic matching failed: {e}. Using keyword fallback.")

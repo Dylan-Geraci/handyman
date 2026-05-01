@@ -10,9 +10,13 @@ This will create:
 """
 
 from database import users_collection, tasks_collection, categories_collection, task_types_collection
+from config import pwd_context
 from datetime import datetime, timedelta
 from bson import ObjectId
 import random
+
+DEMO_PASSWORD = "demo123"
+DEMO_HASH = pwd_context.hash(DEMO_PASSWORD)
 
 def create_test_data():
     print("\n" + "="*60)
@@ -38,21 +42,23 @@ def create_test_data():
     # Create test taskers
     print("Creating test taskers...")
 
+    # Sarah covers ALL categories so she always has matches for whichever
+    # category the demo task gets posted under
     tasker_1 = {
         "_id": ObjectId(),
         "username": "alice_builder",
-        "email": "alice@testhandyman.com",
-        "full_name": "Alice Builder",
-        "hashed_password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYfXCRgFj6C",  # "password123"
+        "email": "sarah@testhandyman.com",
+        "full_name": "Sarah Builder",
+        "hashed_password": DEMO_HASH,
         "role": "tasker",
         "phone_number": "555-0101",
         "location": "Brooklyn, NY",
         "bio": "Experienced handyman specializing in furniture assembly, carpentry, and home repairs. 5 years of professional experience.",
-        "skills": ["Furniture Assembly", "Carpentry", "Drywall Repair", "Painting", "General Repairs"],
-        "service_categories": category_ids[:2] if len(category_ids) >= 2 else category_ids,
+        "skills": ["Furniture Assembly", "Carpentry", "Drywall Repair", "Painting", "TV Mounting", "General Repairs"],
+        "service_categories": category_ids,  # all categories for demo coverage
         "is_available": True,
         "created_at": datetime.utcnow(),
-        "experience_level": 2,  # Intermediate
+        "experience_level": 2,
         "completed_tasks_count": 25,
         "avg_rating": 4.7,
         "preferred_locations": ["Brooklyn", "Manhattan"],
@@ -65,7 +71,7 @@ def create_test_data():
         "username": "bob_fixer",
         "email": "bob@testhandyman.com",
         "full_name": "Bob Fixer",
-        "hashed_password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYfXCRgFj6C",  # "password123"
+        "hashed_password": DEMO_HASH,
         "role": "tasker",
         "phone_number": "555-0102",
         "location": "Manhattan, NY",
@@ -74,7 +80,7 @@ def create_test_data():
         "service_categories": category_ids[2:4] if len(category_ids) >= 4 else category_ids,
         "is_available": True,
         "created_at": datetime.utcnow(),
-        "experience_level": 3,  # Expert
+        "experience_level": 3,
         "completed_tasks_count": 78,
         "avg_rating": 4.9,
         "preferred_locations": ["Manhattan", "Queens"],
@@ -82,21 +88,61 @@ def create_test_data():
         "coordinates": {"lat": 40.7831, "lng": -73.9712}
     }
 
-    # Check if taskers already exist
-    existing_1 = users_collection.find_one({"username": tasker_1["username"]})
-    existing_2 = users_collection.find_one({"username": tasker_2["username"]})
+    # Customer for demo (posts the TV-mount task during walkthrough)
+    customer_demo = {
+        "_id": ObjectId(),
+        "username": "mike_customer",
+        "email": "mike@testhandyman.com",
+        "full_name": "Mike Carter",
+        "hashed_password": DEMO_HASH,
+        "role": "client",
+        "phone_number": "555-0200",
+        "location": "Brooklyn, NY",
+        "bio": "",
+        "skills": [],
+        "service_categories": [],
+        "is_available": True,
+        "created_at": datetime.utcnow(),
+    }
 
-    if not existing_1:
-        users_collection.insert_one(tasker_1)
-        print(f"[OK] Created tasker: {tasker_1['username']}")
-    else:
-        print(f"[SKIP] Tasker already exists: {tasker_1['username']}")
+    # Admin for demo
+    admin_demo = {
+        "_id": ObjectId(),
+        "username": "admin",
+        "email": "admin@testhandyman.com",
+        "full_name": "Demo Admin",
+        "hashed_password": DEMO_HASH,
+        "role": "admin",
+        "phone_number": "555-0001",
+        "location": "Brooklyn, NY",
+        "bio": "",
+        "skills": [],
+        "service_categories": [],
+        "is_available": True,
+        "created_at": datetime.utcnow(),
+    }
 
-    if not existing_2:
-        users_collection.insert_one(tasker_2)
-        print(f"[OK] Created tasker: {tasker_2['username']}")
-    else:
-        print(f"[SKIP] Tasker already exists: {tasker_2['username']}")
+    def upsert_user(user_doc):
+        existing = users_collection.find_one({"username": user_doc["username"]})
+        if existing:
+            # Refresh password + key demo fields so re-runs always work
+            users_collection.update_one(
+                {"username": user_doc["username"]},
+                {"$set": {
+                    "hashed_password": DEMO_HASH,
+                    "role": user_doc["role"],
+                    "service_categories": user_doc.get("service_categories", []),
+                }}
+            )
+            print(f"[REFRESH] User updated: {user_doc['username']}")
+        else:
+            users_collection.insert_one(user_doc)
+            print(f"[OK] Created user: {user_doc['username']}")
+
+    upsert_user(tasker_1)
+    upsert_user(tasker_2)
+    upsert_user(customer_demo)
+    upsert_user(admin_demo)
 
     print()
 
@@ -237,9 +283,10 @@ def create_test_data():
     print("   uvicorn main:app --reload --port 8000")
     print("\n2. Open API docs:")
     print("   http://localhost:8000/docs")
-    print("\n3. Login as test tasker:")
-    print("   Username: alice_builder")
-    print("   Password: password123")
+    print("\n3. Demo login credentials (all use password: demo123):")
+    print("   Customer:  mike_customer")
+    print("   Tasker:    alice_builder  (Sarah)")
+    print("   Admin:     admin")
     print("   (Use POST /token endpoint)")
     print("\n4. Test recommendations:")
     print("   GET /api/tasks/recommendations")

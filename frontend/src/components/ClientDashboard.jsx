@@ -1,20 +1,27 @@
 import { useState, useEffect, useContext, useMemo } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import LeaveReview from "./LeaveReview";
+
+const DEMO_TASK_PRESET = {
+  title: "Mount a 65\" TV in living room",
+  description:
+    "Need help wall-mounting a Samsung 65\" QLED TV above the fireplace. Mounting bracket and TV are already on-site. Wall is drywall over wood studs. Should take 1-2 hours. Looking for someone who can come this week.",
+  location: "Brooklyn, NY",
+};
 
 function ClientDashboard() {
   const { user, token } = useContext(AuthContext);
   const location = useLocation();
   const fromCategory = location.state?.fromCategory || null;
+  const [searchParams] = useSearchParams();
+  const isDemoPrefill = searchParams.get("demo") === "1";
 
   const [myTasks, setMyTasks] = useState([]);
-  const [taskData, setTaskData] = useState({
-    title: "",
-    description: "",
-    location: "",
-  });
+  const [taskData, setTaskData] = useState(() =>
+    isDemoPrefill ? { ...DEMO_TASK_PRESET } : { title: "", description: "", location: "" }
+  );
   const [message, setMessage] = useState("");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedTaskForReview, setSelectedTaskForReview] = useState(null);
@@ -136,6 +143,15 @@ function ClientDashboard() {
           </div>
 
           <div className="flex flex-wrap gap-3">
+            {import.meta.env.VITE_DEMO_MODE === "true" && (
+              <button
+                type="button"
+                onClick={() => setTaskData({ ...DEMO_TASK_PRESET })}
+                className="rounded-full bg-gradient-to-r from-[#2b8f8a] to-[#227670] px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:from-[#227670] hover:to-[#1c5e59]"
+              >
+                ✨ Fill Demo Task
+              </button>
+            )}
             <Link
               to="/client/tasks"
               className="rounded-full border border-[#8f3737] px-5 py-3 text-sm font-medium text-[#8f3737] transition hover:bg-[#8f3737] hover:text-white"

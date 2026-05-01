@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\sendd\\\\OneDrive\\\\Desktop\\\\industry-projects\\\\Handyman-project\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs wc *)",
+      "Bash(xargs ls *)",
+      "Bash(git *)"
+    ]
+  }
+}

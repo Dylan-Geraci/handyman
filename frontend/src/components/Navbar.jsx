@@ -271,12 +271,20 @@ function Navbar() {
               )}
 
               {user?.role === "tasker" && (
-                <Link
-                  to="/tasker/dashboard"
-                  className="hidden whitespace-nowrap text-sm text-slate-700 transition hover:text-[#7b2e2f] sm:block"
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    to="/tasker/dashboard"
+                    className="hidden whitespace-nowrap text-sm text-slate-700 transition hover:text-[#7b2e2f] sm:block"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/recommended"
+                    className="hidden whitespace-nowrap rounded-full border border-[#2b8f8a] bg-[#2b8f8a] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#227670] sm:inline-flex"
+                  >
+                    ✨ AI Picks
+                  </Link>
+                </>
               )}
 
               <button
