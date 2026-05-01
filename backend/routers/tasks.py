@@ -427,13 +427,14 @@ async def accept_task(
     }
     tasks_collection.update_one({"_id": ObjectId(task_id)}, update_data)
 
-    # Notify the client
-    notification_for_client = Notification(
-        user_to_notify=task["client_username"],
-        message=f"Your task '{task['title']}' has been accepted by {current_user['full_name']}.",
-        link=f"/tasks/{task_id}/chat"
-    )
-    notifications_collection.insert_one(notification_for_client.dict())
+    # Notify the client (skip if task has no client — e.g., scraped tasks)
+    if task.get("client_username"):
+        notification_for_client = Notification(
+            user_to_notify=task["client_username"],
+            message=f"Your task '{task['title']}' has been accepted by {current_user.get('full_name') or current_user['username']}.",
+            link=f"/tasks/{task_id}/chat"
+        )
+        notifications_collection.insert_one(notification_for_client.dict())
 
     updated_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
     return populate_task_details(updated_task)

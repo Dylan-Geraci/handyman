@@ -26,6 +26,8 @@ function ClientDashboard() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedTaskForReview, setSelectedTaskForReview] = useState(null);
 
+  const [demoIds, setDemoIds] = useState({ category_id: null, task_type_id: null });
+
   const fetchMyTasks = async () => {
     try {
       const response = await axios.get("http://localhost:8000/api/my-client-tasks");
@@ -35,9 +37,32 @@ function ClientDashboard() {
     }
   };
 
+  // For the demo we don't expose category/task-type pickers — auto-pick the
+  // first valid pair so the post-task button just works.
+  const fetchDemoIds = async () => {
+    try {
+      const cats = await axios.get("http://localhost:8000/api/categories");
+      for (const cat of cats.data || []) {
+        const types = await axios.get(
+          `http://localhost:8000/api/task-types?category_id=${cat.id || cat._id}`
+        );
+        if (types.data && types.data.length > 0) {
+          setDemoIds({
+            category_id: cat.id || cat._id,
+            task_type_id: types.data[0].id || types.data[0]._id,
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch demo IDs:", e);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       fetchMyTasks();
+      fetchDemoIds();
     }
   }, [token]);
 
@@ -61,8 +86,18 @@ function ClientDashboard() {
     e.preventDefault();
     setMessage("");
 
+    if (!demoIds.category_id || !demoIds.task_type_id) {
+      setMessage("Loading task categories... try again in a second.");
+      fetchDemoIds();
+      return;
+    }
+
     try {
-      await axios.post("http://localhost:8000/api/tasks", taskData);
+      await axios.post("http://localhost:8000/api/tasks", {
+        ...taskData,
+        category_id: demoIds.category_id,
+        task_type_id: demoIds.task_type_id,
+      });
       setMessage("Task posted successfully!");
       setTaskData({ title: "", description: "", location: "" });
       fetchMyTasks();

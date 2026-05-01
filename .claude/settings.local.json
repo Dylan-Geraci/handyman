@@ -5,7 +5,11 @@
       "Bash(Select-Object Name)",
       "Bash(xargs wc *)",
       "Bash(xargs ls *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(curl -s -X POST -d \"username=mike_customer&password=demo123\" http://localhost:8000/token)",
+      "Bash(curl -s http://localhost:8000/openapi.json)",
+      "Bash(python -c \"import sys, json; d=json.load\\(sys.stdin\\); paths=list\\(d['paths'].keys\\(\\)\\); print\\('demo route:', '/api/demo/reset' in paths\\); print\\('stream route:', '/api/scraper/run/stream' in paths\\)\")",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

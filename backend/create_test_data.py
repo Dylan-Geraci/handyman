@@ -10,13 +10,13 @@ This will create:
 """
 
 from database import users_collection, tasks_collection, categories_collection, task_types_collection
-from config import pwd_context
+from security import hash_password
 from datetime import datetime, timedelta
 from bson import ObjectId
 import random
 
 DEMO_PASSWORD = "demo123"
-DEMO_HASH = pwd_context.hash(DEMO_PASSWORD)
+DEMO_HASH = hash_password(DEMO_PASSWORD)
 
 def create_test_data():
     print("\n" + "="*60)
@@ -254,8 +254,10 @@ def create_test_data():
     for task in tasks:
         task["_id"] = ObjectId()
         task["created_at"] = task["posted_at"]
+        # Attribute seeded tasks to the demo customer so the accept flow works
+        task["client_username"] = "mike_customer"
+        task["tasker_username"] = None
 
-        # Check if similar task exists
         existing = tasks_collection.find_one({
             "title": task["title"],
             "location": task["location"]
@@ -266,7 +268,15 @@ def create_test_data():
             print(f"[OK] Created task: {task['title']}")
             tasks_created += 1
         else:
-            print(f"[SKIP] Task already exists: {task['title']}")
+            # Backfill missing client_username on previously-seeded tasks
+            if not existing.get("client_username"):
+                tasks_collection.update_one(
+                    {"_id": existing["_id"]},
+                    {"$set": {"client_username": "mike_customer"}}
+                )
+                print(f"[BACKFILL] Set client_username on: {task['title']}")
+            else:
+                print(f"[SKIP] Task already exists: {task['title']}")
 
     print()
     print("="*60)
